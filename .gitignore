@@ -1,0 +1,9 @@
+*.*
+!*.cpp
+!*.c
+!*.ino
+!*.h
+!*.hpp
+!.gitignore
+!*.aia
+external/**
