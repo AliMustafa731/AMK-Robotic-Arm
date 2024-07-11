@@ -65,12 +65,7 @@ public:
   //--------------------------------------------------------------------
   //  Move the end-effector directly to the given position (x, y, z)
   //--------------------------------------------------------------------
-  void moveDirectlyTo(float x, float y, float z);
-
-  //------------------------------------------------------------------------------------------
-  //  Move the end-effector smoothly to the given position (x, y, z) (using interpolation)
-  //------------------------------------------------------------------------------------------
-  void moveSmoothlyTo(float x, float y, float z, int step_size, int delay_time);
+  void moveToPosition(float x, float y, float z);
 
   //----------------------------------------------------------------------------------
   //  Set the posistions of the joint's servo motors to the given angle (in degrees),

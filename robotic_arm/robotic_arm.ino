@@ -200,8 +200,6 @@ void loop()
   //----------------------------------------------------------------
   if (millis() - timeServoUpdate >= 50) // Repeat every (50 milliseconds), to give the servo motors a chance to move smoothly
   {
-    timeServoUpdate = millis();
-
     if (isButtonDown[ButtonID::BUTTON_FORWARD])
     {
       roboticArm.moveSoulderByAngle(3);
@@ -237,6 +235,8 @@ void loop()
     {
       roboticArm.moveGripperByAngle(-3);
     }
+
+    timeServoUpdate = millis();
   }
 }
 

@@ -4,7 +4,7 @@
 //-------------------------------------------------
 //  Move directly to the given position
 //-------------------------------------------------
-void RoboticArm::moveDirectlyTo(float x, float y, float z)
+void RoboticArm::moveToPosition(float x, float y, float z)
 {
   float baseAngle, shoulderAngle, elbowAngle;
 
@@ -17,36 +17,6 @@ void RoboticArm::moveDirectlyTo(float x, float y, float z)
     this->mY = y;
     this->mZ = z;
   }
-}
-
-//--------------------------------------------------------------
-//  Move smoothly to the given position (using interpolation)
-//--------------------------------------------------------------
-void RoboticArm::moveSmoothlyTo(float x, float y, float z, int step_size, int delay_time)
-{
-  if(this->firstMove)
-  {
-    this->firstMove = false;
-    moveDirectlyTo(x, y, z);
-    delay(100);
-    return;
-  }
-
-  float x0 = this->mX;
-  float y0 = this->mY;
-  float z0 = this->mZ;
-  float dist = sqrt((x0 - x)*(x0 - x) + (y0 - y)*(y0 - y) + (z0 - z)*(z0 - z));
-      
-  if(dist > step_size)
-  {
-    for (int i = 0; i < dist; i += step_size)
-    {
-      moveDirectlyTo(x0 + (x - x0)*i / dist, y0 + (y - y0) * i / dist, z0 + (z - z0) * i / dist);
-      delay(delay_time);
-    }
-  }
-  moveDirectlyTo(x, y, z);
-  delay(delay_time);
 }
 
 //----------------------------------------------------------------------------------
