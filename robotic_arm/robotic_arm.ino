@@ -1,43 +1,22 @@
 
 #include <Arduino.h>
-#include "RoboticArm.h"
-#include "ServoMotor.h"
-
 #include <SoftwareSerial.h>
 
-// Create SoftwareSerial object for Bluetooth module at digital pins (RX, TX -> 10, 11)
-// you can use any digital pins
-SoftwareSerial Bluetooth(10, 11);
+#include "RoboticArm.h"
+#include "ServoMotor.h"
+#include "ByteQueue.h"
+
 
 // Android app commands ID's, set to the same values in the android app
 enum Command
 {
-  BUTTON_FORWARD_PRESSED = 1,
-  BUTTON_FORWARD_RELEASED = 2,
-
-  BUTTON_BACKWARD_PRESSED = 3,
-  BUTTON_BACKWARD_RELEASED = 4,
-
-  BUTTON_RIGHT_PRESSED = 5,
-  BUTTON_RIGHT_RELEASED = 6,
-
-  BUTTON_LEFT_PRESSED = 7,
-  BUTTON_LEFT_RELEASED = 8,
-
-  BUTTON_UP_PRESSED = 9,
-  BUTTON_UP_RELEASED = 10,
-
-  BUTTON_DOWN_PRESSED = 11,
-  BUTTON_DOWN_RELEASED = 12,
-
-  BUTTON_GRIPPER_OPEN_PRESSED = 13,
-  BUTTON_GRIPPER_OPEN_RELEASED = 14,
-
-  BUTTON_GRIPPER_CLOSE_PRESSED = 15,
-  BUTTON_GRIPPER_CLOSE_RELEASED = 16
+  SET_PWM = 1,
+  SET_ANGLE = 2,
+  BUTTON_PRESSED = 3,
+  BUTTON_RELEASED = 4
 };
 
-// an array containing the state for each of the (8) buttons
+// an array containing the state for each of the (8) buttons in android app
 bool isButtonDown[8];
 
 // Android app buttons ID's, used as index to the above array "isButtonDown"
@@ -53,21 +32,40 @@ enum ButtonID
   BUTTON_GRIPPER_CLOSE = 7
 };
 
+// Create SoftwareSerial object for Bluetooth module at digital pins (RX, TX -> 10, 11)
+// you can use any digital pins
+SoftwareSerial Bluetooth(10, 11);
+
 // Robotic Arm object
 RoboticArm roboticArm;
+
+// a buffer used to store the incoming commands
+ByteQueue commandQueue;
+uint8_t commandBuffer[256];
+
+// variable used to store the incoming command from the Android App
+int8_t command = 0;
+
+// flag used to instruct the Arduino to read the next command when necessary
+bool isReady = true;
 
 void setup()
 {
   // initialize the Bluetooth module serial communication
   Bluetooth.begin(9600);
 
+  // initialize command queue
+  commandQueue = ByteQueue(commandBuffer, sizeof(commandBuffer));
+
   // initialize the robotic arm with pin's numbers of servo motors on the PCA9685 Servo Driver
   // along with the lengths of the arms (in millimeters),
   // DO NOT CHANGE THESE VALUES
-  roboticArm = RoboticArm(0, 1, 2, 3,  // servo motors pin numbers
-                          140,         // L1 : Shoulder to elbow length in millimeters
-                          140,         // L2 : Elbow to wrist length in millimeters
-                          10);         // L3 : Length from wrist to hand PLUS base centre to shoulder in millimeters
+  roboticArm = RoboticArm(
+    0, 1, 2, 3,  // servo motors pin numbers
+    140,         // L1 : Shoulder to elbow length in millimeters
+    140,         // L2 : Elbow to wrist length in millimeters
+    10           // L3 : Length from wrist to hand PLUS base centre to shoulder in millimeters
+  );
 
   // calibrate the servo motors for (PWM-to-Angle) Conversions
   // DO NOT CHANGE THESE VALUES
@@ -76,7 +74,7 @@ void setup()
   roboticArm.elbowServo.setRanges(341, 553, 90, 180);
   roboticArm.gripperServo.setRanges(120, 570, 0, 180);
 
-  // set home position
+  // set initial position
   roboticArm.setBaseAngle(90);
   roboticArm.setShoulderAngle(90);
   roboticArm.setElbowAngle(180);
@@ -85,41 +83,111 @@ void setup()
 
 void loop()
 {
-  //-------------------------------------------------------
-  // Read commands (Bytes) from the Bluetooth device
-  //-------------------------------------------------------
-  while(Bluetooth.available())
+  //----------------------------------------------------------------
+  // Read (Bytes) from the Bluetooth device and store in the Queue
+  //----------------------------------------------------------------
+  while(Bluetooth.available() > 0 && commandQueue.free_space() > 0)
   {
-    // read a signle byte
-    int recivedData = Bluetooth.read();
+    uint8_t data = Bluetooth.read();
+    commandQueue.enqueue(data);
+  }
 
-    //----------------------------------------------------------------------------------------
-    // set the state of each button depending on the recived command from the Android app
-    //----------------------------------------------------------------------------------------
+  //-------------------------------------------------------
+  // Execute the commands from the Queue
+  //-------------------------------------------------------
+  if (isReady && commandQueue.size() > 0)
+  {
+    // read the next command  (signle byte)
+    command = commandQueue.dequeue();
 
-    if (recivedData == Command::BUTTON_FORWARD_PRESSED)  isButtonDown[ButtonID::BUTTON_FORWARD] = true;
-    if (recivedData == Command::BUTTON_FORWARD_RELEASED) isButtonDown[ButtonID::BUTTON_FORWARD] = false;
+    isReady = false;
+  }
+  
+  //----------------------------------------------------------------------------------------
+  // set the state of each button depending on the recived command from the Android app,
+  // the Android App sends this command whenever a (Joystick) button is pressed.
+  //----------------------------------------------------------------------------------------
+  if (command == Command::BUTTON_PRESSED && !isReady)
+  {
+    // this command is expected to be sent with additional (1 byte), representing the ID of the button
+    if (commandQueue.size() >= sizeof(int8_t))
+    {
+      int8_t button_id = commandQueue.dequeue();
 
-    if (recivedData == Command::BUTTON_BACKWARD_PRESSED)  isButtonDown[ButtonID::BUTTON_BACKWARD] = true;
-    if (recivedData == Command::BUTTON_BACKWARD_RELEASED) isButtonDown[ButtonID::BUTTON_BACKWARD] = false;
+      isButtonDown[button_id] = true;
 
-    if (recivedData == Command::BUTTON_RIGHT_PRESSED)  isButtonDown[ButtonID::BUTTON_RIGHT] = true;
-    if (recivedData == Command::BUTTON_RIGHT_RELEASED) isButtonDown[ButtonID::BUTTON_RIGHT] = false;
+      isReady = true;
+    }
+  }
+  else if (command == Command::BUTTON_RELEASED && !isReady)
+  {
+    // this command is expected to be sent with additional (1 byte), representing the ID of the button
+    if (commandQueue.size() >= sizeof(int8_t))
+    {
+      int8_t button_id = commandQueue.dequeue();
 
-    if (recivedData == Command::BUTTON_LEFT_PRESSED)  isButtonDown[ButtonID::BUTTON_LEFT] = true;
-    if (recivedData == Command::BUTTON_LEFT_RELEASED) isButtonDown[ButtonID::BUTTON_LEFT] = false;
+      isButtonDown[button_id] = false;
 
-    if (recivedData == Command::BUTTON_UP_PRESSED)  isButtonDown[ButtonID::BUTTON_UP] = true;
-    if (recivedData == Command::BUTTON_UP_RELEASED) isButtonDown[ButtonID::BUTTON_UP] = false;
+      isReady = true;
+    }
+  }
+  //-----------------------------------------------------------------------
+  // set the PWM or Angle positions of the servo motors,
+  // the android app sends this command when (Sliders) are changed.
+  //-----------------------------------------------------------------------
+  else if (command == Command::SET_ANGLE && !isReady)
+  {
+    // this command is expected to be sent with additional (8 bytes),
+    // 1st (2 bytes) : 16-bit value of (Base) angle
+    // 2nd (2 bytes) : 16-bit value of (Shoulder) angle
+    // 3rd (2 bytes) : 16-bit value of (Elbow) angle
+    // 4th (2 bytes) : 16-bit value of (Gripper) angle
+    if (commandQueue.size() >= sizeof(int8_t) * 8)
+    {
+      int16_t base_angle;
+      int16_t shoulder_angle;
+      int16_t elbow_angle;
+      int16_t gripper_angle;
 
-    if (recivedData == Command::BUTTON_DOWN_PRESSED)  isButtonDown[ButtonID::BUTTON_DOWN] = true;
-    if (recivedData == Command::BUTTON_DOWN_RELEASED) isButtonDown[ButtonID::BUTTON_DOWN] = false;
+      commandQueue.dequeue((uint8_t*)&base_angle, sizeof(int16_t));
+      commandQueue.dequeue((uint8_t*)&shoulder_angle, sizeof(int16_t));
+      commandQueue.dequeue((uint8_t*)&elbow_angle, sizeof(int16_t));
+      commandQueue.dequeue((uint8_t*)&gripper_angle, sizeof(int16_t));
 
-    if (recivedData == Command::BUTTON_GRIPPER_OPEN_PRESSED)  isButtonDown[ButtonID::BUTTON_GRIPPER_OPEN] = true;
-    if (recivedData == Command::BUTTON_GRIPPER_OPEN_RELEASED) isButtonDown[ButtonID::BUTTON_GRIPPER_OPEN] = false;
-    
-    if (recivedData == Command::BUTTON_GRIPPER_CLOSE_PRESSED)  isButtonDown[ButtonID::BUTTON_GRIPPER_CLOSE] = true;
-    if (recivedData == Command::BUTTON_GRIPPER_CLOSE_RELEASED) isButtonDown[ButtonID::BUTTON_GRIPPER_CLOSE] = false;
+      roboticArm.setBaseAngle(float(base_angle));
+      roboticArm.setShoulderAngle(float(shoulder_angle));
+      roboticArm.setElbowAngle(float(elbow_angle));
+      roboticArm.setGripperAngle(float(gripper_angle));
+
+      isReady = true;
+    }
+  }
+  else if (command == Command::SET_PWM && !isReady)
+  {
+    // this command is expected to be sent with additional (8 bytes),
+    // 1st (2 bytes) : 16-bit value of (Base) pwm
+    // 2nd (2 bytes) : 16-bit value of (Shoulder) pwm
+    // 3rd (2 bytes) : 16-bit value of (Elbow) pwm
+    // 4th (2 bytes) : 16-bit value of (Gripper) pwm
+    if (commandQueue.size() >= sizeof(int8_t) * 8)
+    {
+      int16_t base_pwm;
+      int16_t shoulder_pwm;
+      int16_t elbow_pwm;
+      int16_t gripper_pwm;
+
+      commandQueue.dequeue((uint8_t*)&base_pwm, sizeof(int16_t));
+      commandQueue.dequeue((uint8_t*)&shoulder_pwm, sizeof(int16_t));
+      commandQueue.dequeue((uint8_t*)&elbow_pwm, sizeof(int16_t));
+      commandQueue.dequeue((uint8_t*)&gripper_pwm, sizeof(int16_t));
+
+      roboticArm.baseServo.setPositionPWM(base_pwm);
+      roboticArm.shoulderServo.setPositionPWM(shoulder_pwm);
+      roboticArm.elbowServo.setPositionPWM(elbow_pwm);
+      roboticArm.gripperServo.setPositionPWM(gripper_pwm);
+
+      isReady = true;
+    }
   }
 
   //-----------------------------------------------------------------
