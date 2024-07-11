@@ -49,6 +49,9 @@ int8_t command = 0;
 // flag used to instruct the Arduino to read the next command when necessary
 bool isReady = true;
 
+// a counter variable used to update the positions of the servo motors frequently
+unsigned long timeServoUpdate;
+
 void setup()
 {
   // initialize the Bluetooth module serial communication
@@ -79,6 +82,8 @@ void setup()
   roboticArm.setShoulderAngle(90);
   roboticArm.setElbowAngle(180);
   roboticArm.setGripperAngle(90);
+
+  timeServoUpdate = millis();
 }
 
 void loop()
@@ -193,45 +198,46 @@ void loop()
   //-----------------------------------------------------------------
   // move the robotic arm depending on which buttons are held down
   //----------------------------------------------------------------
+  if (millis() - timeServoUpdate >= 50) // Repeat every (50 milliseconds), to give the servo motors a chance to move smoothly
+  {
+    timeServoUpdate = millis();
 
-  if (isButtonDown[ButtonID::BUTTON_FORWARD])
-  {
-    roboticArm.moveSoulderByAngle(3);
-  }
-  if (isButtonDown[ButtonID::BUTTON_BACKWARD])
-  {
-    roboticArm.moveSoulderByAngle(-3);
-  }
+    if (isButtonDown[ButtonID::BUTTON_FORWARD])
+    {
+      roboticArm.moveSoulderByAngle(3);
+    }
+    if (isButtonDown[ButtonID::BUTTON_BACKWARD])
+    {
+      roboticArm.moveSoulderByAngle(-3);
+    }
 
-  if (isButtonDown[ButtonID::BUTTON_RIGHT])
-  {
-    roboticArm.moveBaseByAngle(-3);
-  }
-  if (isButtonDown[ButtonID::BUTTON_LEFT])
-  {
-    roboticArm.moveBaseByAngle(3);
-  }
+    if (isButtonDown[ButtonID::BUTTON_RIGHT])
+    {
+      roboticArm.moveBaseByAngle(-3);
+    }
+    if (isButtonDown[ButtonID::BUTTON_LEFT])
+    {
+      roboticArm.moveBaseByAngle(3);
+    }
 
-  if (isButtonDown[ButtonID::BUTTON_UP])
-  {
-    roboticArm.moveElbowByAngle(3);
-  }
-  if (isButtonDown[ButtonID::BUTTON_DOWN])
-  {
-    roboticArm.moveElbowByAngle(-3);
-  }
+    if (isButtonDown[ButtonID::BUTTON_UP])
+    {
+      roboticArm.moveElbowByAngle(3);
+    }
+    if (isButtonDown[ButtonID::BUTTON_DOWN])
+    {
+      roboticArm.moveElbowByAngle(-3);
+    }
 
-  if (isButtonDown[ButtonID::BUTTON_GRIPPER_OPEN])
-  {
-    roboticArm.moveGripperByAngle(3);
+    if (isButtonDown[ButtonID::BUTTON_GRIPPER_OPEN])
+    {
+      roboticArm.moveGripperByAngle(3);
+    }
+    if (isButtonDown[ButtonID::BUTTON_GRIPPER_CLOSE])
+    {
+      roboticArm.moveGripperByAngle(-3);
+    }
   }
-  if (isButtonDown[ButtonID::BUTTON_GRIPPER_CLOSE])
-  {
-    roboticArm.moveGripperByAngle(-3);
-  }
-
-  // sleep for (50 milliseconds), to give the servo motors a chance to move smoothly
-  delay(50);
 }
 
 
