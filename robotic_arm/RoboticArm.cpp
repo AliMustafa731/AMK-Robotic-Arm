@@ -1,83 +1,72 @@
 
 #include "RoboticArm.h"
 
+//---------------------------------
+// Initialize the Robotic Arm
+//---------------------------------
+void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3)
+{
+  // initialize the Servo Driver
+  pwmDriver = Adafruit_PWMServoDriver(0x40);
+  pwmDriver.begin();
+  pwmDriver.setPWMFreq(50);
+
+  // initialize the servo motors
+  baseServo.begin(base_pin, &pwmDriver);
+  shoulderServo.begin(shoulder_pin, &pwmDriver);
+  elbowServo.begin(elbow_pin, &pwmDriver);
+  gripperServo.begin(gripper_pin, &pwmDriver);
+
+  setArmLengths(_L1, _L2, _L3);
+}
+
 //-------------------------------------------------
 //  Move directly to the given position
 //-------------------------------------------------
-void RoboticArm::moveToPosition(float x, float y, float z)
+void RoboticArm::moveTo(float x, float y, float z)
 {
   float baseAngle, shoulderAngle, elbowAngle;
 
   if (solve(x, y, z, baseAngle, shoulderAngle, elbowAngle))
   {
-    setBaseAngle(baseAngle);
-    setShoulderAngle(shoulderAngle);
-    setElbowAngle(elbowAngle);
+    baseServo.setPositionAngle(baseAngle);
+    shoulderServo.setPositionAngle(shoulderAngle);
+    elbowServo.setPositionAngle(elbowAngle);
     this->mX = x;
     this->mY = y;
     this->mZ = z;
   }
 }
 
-//----------------------------------------------------------------------------------
-//  Set the posistions of the joint's servo motors to the given angle (in degrees),
-//  Taking into account the physical limits of the Robotic Arm,
-//  And also updating the current position of the end-effector (x, y, z),
-//  THIS IS THE MOST SAFE FUNCTION TO USE
-//----------------------------------------------------------------------------------
-void RoboticArm::setBaseAngle(float angle)
+//----------------------------------------------------------------------------
+//  Move the end-effector from it's current position by the given (x, y, z)
+//----------------------------------------------------------------------------
+void RoboticArm::moveBy(float x, float y, float z)
 {
-  baseServo.setPositionAngle(angle);
-
-  // update position of the end-effector (x, y, z)
-  unsolve(baseServo.getAngle(), shoulderServo.getAngle(), elbowServo.getAngle(), mX, mY, mZ);
+  moveTo(this->mX + x, this->mY + y, this->mZ + z);
 }
 
-void RoboticArm::setShoulderAngle(float angle)
+//---------------------------------------------------------------------------------------
+//  Move the end-effector directly to the given position in Cylindrical coordinates
+//---------------------------------------------------------------------------------------
+void RoboticArm::moveToCylindrical(float theta, float radius, float z)
 {
-  shoulderServo.setPositionAngle(angle);
+  this->Theta = theta;
+  this->Radius = radius;
 
-  // update position of the end-effector (x, y, z)
-  unsolve(baseServo.getAngle(), shoulderServo.getAngle(), elbowServo.getAngle(), mX, mY, mZ);
+  float x, y;
+
+  polar2cart(radius, theta, x, y);
+
+  moveTo(x, y, z);
 }
 
-void RoboticArm::setElbowAngle(float angle)
+//--------------------------------------------------------------------------------------------
+//  Move the end-effector from it's current position by the given Cylindrical coordinates
+//--------------------------------------------------------------------------------------------
+void RoboticArm::moveByCylindrical(float theta, float radius, float z)
 {
-  elbowServo.setPositionAngle(angle);
-
-  // update position of the end-effector (x, y, z)
-  unsolve(baseServo.getAngle(), shoulderServo.getAngle(), elbowServo.getAngle(), mX, mY, mZ);
-}
-
-void RoboticArm::setGripperAngle(float angle)
-{
-  gripperServo.setPositionAngle(angle);
-}
-
-//----------------------------------------------------------------------------------
-//  Move the posistions of the joint's servo motors by the given angle (in degrees),
-//  Taking into account the physical limits of the Robotic Arm,
-//  And also updating the current position of the end-effector (x, y, z),
-//  THIS IS THE MOST SAFE FUNCTION TO USE
-//----------------------------------------------------------------------------------
-void RoboticArm::moveBaseByAngle(float angle)
-{
-  setBaseAngle(baseServo.getAngle() + angle);
-}
-
-void RoboticArm::moveSoulderByAngle(float angle)
-{
-  setShoulderAngle(shoulderServo.getAngle() + angle);
-}
-
-void RoboticArm::moveElbowByAngle(float angle)
-{
-  setElbowAngle(elbowServo.getAngle() + angle);
-}
-
-void RoboticArm::moveGripperByAngle(float angle)
-{
-  setGripperAngle(gripperServo.getAngle() + angle);
+  moveToCylindrical(this->Theta + theta, this->Radius + radius, this->mZ + z);
 }
 
 //--------------------------------------------------------------
@@ -144,10 +133,6 @@ void RoboticArm::unsolve(float a0, float a1, float a2, float& x, float& y, float
   z = v;
 }
 
-//---------------------------------
-//  Utility Functions
-//---------------------------------
-
 //-------------------------------------------------------
 //  convert cartesian coordinates into polar coordinates
 //-------------------------------------------------------
@@ -196,7 +181,7 @@ bool cosangle(float opp, float adj1, float adj2, float& theta)
   // A, B are adjacent
   float den = 2*adj1*adj2;
 
-  if(den==0) return false;
+  if(den == 0) return false;
   float c = (adj1*adj1 + adj2*adj2 - opp*opp)/den;
 
   if(c>1 || c<-1) return false;

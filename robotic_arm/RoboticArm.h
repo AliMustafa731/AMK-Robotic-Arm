@@ -11,11 +11,9 @@ class RoboticArm
 {
 private:
 
-  // Current position of the end effector (x, y, z)
+  // Current position of the end-effector : Cartesian (x, y, z) and Cylindrical (Theta, Radius, z)
   float mX, mY, mZ;
-
-  // PCA9685 Servo Driver Handle
-  Adafruit_PWMServoDriver pwmDriver;
+  float Theta, Radius;
 
   /*---------------------------------------------------------------------------------
     Arm Lengths :
@@ -24,15 +22,10 @@ private:
     L3 : Length from wrist to hand PLUS base centre to shoulder in millimeters
   ----------------------------------------------------------------------------------*/
   float L1, L2, L3;
-
-  /*-------------------------------------------------------------------------------------------
-    flag indicating if the arm has just started,
-    in that case, (when moving the arm) set the position immediatly,
-    otherwise, there's a valid position in the position variables (mX, mY, mZ),
-    so we can move the arm smoothly (using interpolation from "old" to "new" positions)
-  -------------------------------------------------------------------------------------------*/
-  bool firstMove;
-
+  
+  // PCA9685 Servo Driver Handle
+  Adafruit_PWMServoDriver pwmDriver;
+  
 public:
 
   /*--------------------------------
@@ -45,53 +38,34 @@ public:
 
   RoboticArm(){}
 
-  RoboticArm(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3)
-  {
-    // initialize the Servo Driver
-    pwmDriver = Adafruit_PWMServoDriver(0x40);
-    pwmDriver.begin();
-    pwmDriver.setPWMFreq(50);
-
-    // initialize the servo motors
-    baseServo = ServoMotor(base_pin, &pwmDriver);
-    shoulderServo = ServoMotor(shoulder_pin, &pwmDriver);
-    elbowServo = ServoMotor(elbow_pin, &pwmDriver);
-    gripperServo = ServoMotor(gripper_pin, &pwmDriver);
-
-    setArmLengths(_L1, _L2, _L3);
-    firstMove = true;
-  }
+  //---------------------------------
+  // Initialize the Robotic Arm
+  //---------------------------------
+  void begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3);
 
   //--------------------------------------------------------------------
   //  Move the end-effector directly to the given position (x, y, z)
   //--------------------------------------------------------------------
-  void moveToPosition(float x, float y, float z);
+  void moveTo(float x, float y, float z);
 
-  //----------------------------------------------------------------------------------
-  //  Set the posistions of the joint's servo motors to the given angle (in degrees),
-  //  Taking into account the physical limits of the Robotic Arm,
-  //  And also updating the current position of the end-effector (x, y, z),
-  //  THIS IS THE MOST SAFE FUNCTION TO USE
-  //----------------------------------------------------------------------------------
-  void setBaseAngle(float angle);
-  void setShoulderAngle(float angle);
-  void setElbowAngle(float angle);
-  void setGripperAngle(float angle);
+  //----------------------------------------------------------------------------
+  //  Move the end-effector from it's current position by the given (x, y, z)
+  //----------------------------------------------------------------------------
+  void moveBy(float x, float y, float z);
 
-  //----------------------------------------------------------------------------------
-  //  Move the posistions of the joint's servo motors by the given angle (in degrees),
-  //  Taking into account the physical limits of the Robotic Arm,
-  //  And also updating the current position of the end-effector (x, y, z),
-  //  THIS IS THE MOST SAFE FUNCTION TO USE
-  //----------------------------------------------------------------------------------
-  void moveBaseByAngle(float angle);
-  void moveSoulderByAngle(float angle);
-  void moveElbowByAngle(float angle);
-  void moveGripperByAngle(float angle);
+  //---------------------------------------------------------------------------------------
+  //  Move the end-effector directly to the given position in Cylindrical coordinates
+  //---------------------------------------------------------------------------------------
+  void moveToCylindrical(float theta, float radius, float z);
+
+  //--------------------------------------------------------------------------------------------
+  //  Move the end-effector from it's current position by the given Cylindrical coordinates
+  //--------------------------------------------------------------------------------------------
+  void moveByCylindrical(float theta, float radius, float z);
 
   //--------------------------------------------------------------
   //  Set the lengths of the arms (L1, L2 and L3),
-  //  These lengths are used by inverse kinematics calculations
+  //  These lengths are used by kinematics calculations
   //--------------------------------------------------------------
   void setArmLengths(float _L1, float _L2, float _L3);
 

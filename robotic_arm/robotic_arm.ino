@@ -32,8 +32,7 @@ enum ButtonID
   BUTTON_GRIPPER_CLOSE = 7
 };
 
-// Create SoftwareSerial object for Bluetooth module at digital pins (RX, TX -> 10, 11)
-// you can use any digital pins
+// SoftwareSerial object for Bluetooth module at digital pins (RX, TX -> 10, 11)
 SoftwareSerial Bluetooth(10, 11);
 
 // Robotic Arm object
@@ -46,12 +45,15 @@ uint8_t commandBuffer[256];
 // variable used to store the incoming command from the Android App
 int8_t command = 0;
 
-// flag used to instruct the Arduino to read the next command when necessary
+// flag used to indicate that we're ready to read the next command from the Commands Queue
 bool isReady = true;
 
 // a counter variable used to update the positions of the servo motors frequently
 unsigned long timeServoUpdate;
 
+//----------------------------
+//  Setup
+//----------------------------
 void setup()
 {
   // initialize the Bluetooth module serial communication
@@ -60,32 +62,41 @@ void setup()
   // initialize command queue
   commandQueue = ByteQueue(commandBuffer, sizeof(commandBuffer));
 
-  // initialize the robotic arm with pin's numbers of servo motors on the PCA9685 Servo Driver
-  // along with the lengths of the arms (in millimeters),
+  // initialize the robotic arm
   // DO NOT CHANGE THESE VALUES
-  roboticArm = RoboticArm(
-    0, 1, 2, 3,  // servo motors pin numbers
+  roboticArm.begin(
+    0, 1, 2, 3,  // servo motors pin numbers (Base, Shoulder, Elbow, Gripper)
     140,         // L1 : Shoulder to elbow length in millimeters
     140,         // L2 : Elbow to wrist length in millimeters
-    10           // L3 : Length from wrist to hand PLUS base centre to shoulder in millimeters
+    10           // L3 : Length from wrist to hand PLUS base center to shoulder in millimeters
   );
 
   // calibrate the servo motors for (PWM-to-Angle) Conversions
   // DO NOT CHANGE THESE VALUES
   roboticArm.baseServo.setRanges(116, 540, 0, 180);
-  roboticArm.shoulderServo.setRanges(106, 537, 0, 180);
+  roboticArm.shoulderServo.setRanges(537, 106, 0, 180);
   roboticArm.elbowServo.setRanges(341, 553, 90, 180);
   roboticArm.gripperServo.setRanges(120, 570, 0, 180);
 
+  // set (max / min) limits of the servo angles
+  // DO NOT CHANGE THESE VALUES
+  roboticArm.baseServo.setLimits(0, 180);
+  roboticArm.shoulderServo.setLimits(40, 120);
+  roboticArm.elbowServo.setLimits(0, 180);
+  roboticArm.gripperServo.setLimits(70, 115);
+
   // set initial position
-  roboticArm.setBaseAngle(90);
-  roboticArm.setShoulderAngle(90);
-  roboticArm.setElbowAngle(180);
-  roboticArm.setGripperAngle(90);
+  roboticArm.baseServo.setPositionAngle(90);
+  roboticArm.shoulderServo.setPositionAngle(90);
+  roboticArm.elbowServo.setPositionAngle(180);
+  roboticArm.gripperServo.setPositionAngle(90);
 
   timeServoUpdate = millis();
 }
 
+//----------------------------
+//  Loop
+//----------------------------
 void loop()
 {
   //----------------------------------------------------------------
@@ -98,11 +109,10 @@ void loop()
   }
 
   //-------------------------------------------------------
-  // Execute the commands from the Queue
+  // Read the next command from the Queue
   //-------------------------------------------------------
   if (isReady && commandQueue.size() > 0)
   {
-    // read the next command  (signle byte)
     command = commandQueue.dequeue();
 
     isReady = false;
@@ -112,10 +122,10 @@ void loop()
   // set the state of each button depending on the recived command from the Android app,
   // the Android App sends this command whenever a (Joystick) button is pressed.
   //----------------------------------------------------------------------------------------
-  if (command == Command::BUTTON_PRESSED && !isReady)
+  if (command == Command::BUTTON_PRESSED)
   {
     // this command is expected to be sent with additional (1 byte), representing the ID of the button
-    if (commandQueue.size() >= sizeof(int8_t))
+    if (commandQueue.size() >= 1)
     {
       int8_t button_id = commandQueue.dequeue();
 
@@ -124,10 +134,10 @@ void loop()
       isReady = true;
     }
   }
-  else if (command == Command::BUTTON_RELEASED && !isReady)
+  else if (command == Command::BUTTON_RELEASED)
   {
     // this command is expected to be sent with additional (1 byte), representing the ID of the button
-    if (commandQueue.size() >= sizeof(int8_t))
+    if (commandQueue.size() >= 1)
     {
       int8_t button_id = commandQueue.dequeue();
 
@@ -138,16 +148,16 @@ void loop()
   }
   //-----------------------------------------------------------------------
   // set the PWM or Angle positions of the servo motors,
-  // the android app sends this command when (Sliders) are changed.
+  // the Android App sends this command when (Sliders) are changed.
   //-----------------------------------------------------------------------
-  else if (command == Command::SET_ANGLE && !isReady)
+  else if (command == Command::SET_ANGLE)
   {
     // this command is expected to be sent with additional (8 bytes),
     // 1st (2 bytes) : 16-bit value of (Base) angle
     // 2nd (2 bytes) : 16-bit value of (Shoulder) angle
     // 3rd (2 bytes) : 16-bit value of (Elbow) angle
     // 4th (2 bytes) : 16-bit value of (Gripper) angle
-    if (commandQueue.size() >= sizeof(int8_t) * 8)
+    if (commandQueue.size() >= 8)
     {
       int16_t base_angle;
       int16_t shoulder_angle;
@@ -159,22 +169,22 @@ void loop()
       commandQueue.dequeue((uint8_t*)&elbow_angle, sizeof(int16_t));
       commandQueue.dequeue((uint8_t*)&gripper_angle, sizeof(int16_t));
 
-      roboticArm.setBaseAngle(float(base_angle));
-      roboticArm.setShoulderAngle(float(shoulder_angle));
-      roboticArm.setElbowAngle(float(elbow_angle));
-      roboticArm.setGripperAngle(float(gripper_angle));
+      roboticArm.baseServo.setPositionAngle(float(base_angle));
+      roboticArm.shoulderServo.setPositionAngle(float(shoulder_angle));
+      roboticArm.elbowServo.setPositionAngle(float(elbow_angle));
+      roboticArm.gripperServo.setPositionAngle(float(gripper_angle));
 
       isReady = true;
     }
   }
-  else if (command == Command::SET_PWM && !isReady)
+  else if (command == Command::SET_PWM)
   {
     // this command is expected to be sent with additional (8 bytes),
     // 1st (2 bytes) : 16-bit value of (Base) pwm
     // 2nd (2 bytes) : 16-bit value of (Shoulder) pwm
     // 3rd (2 bytes) : 16-bit value of (Elbow) pwm
     // 4th (2 bytes) : 16-bit value of (Gripper) pwm
-    if (commandQueue.size() >= sizeof(int8_t) * 8)
+    if (commandQueue.size() >= 8)
     {
       int16_t base_pwm;
       int16_t shoulder_pwm;
@@ -197,43 +207,45 @@ void loop()
 
   //-----------------------------------------------------------------
   // move the robotic arm depending on which buttons are held down
-  //----------------------------------------------------------------
-  if (millis() - timeServoUpdate >= 50) // Repeat every (50 milliseconds), to give the servo motors a chance to move smoothly
+  //---------------------------------------------------------------------------------------
+  // Repeat every (100 milliseconds), to give the servo motors the chance to move smoothly
+  //---------------------------------------------------------------------------------------
+  if (millis() - timeServoUpdate >= 100)
   {
     if (isButtonDown[ButtonID::BUTTON_FORWARD])
     {
-      roboticArm.moveSoulderByAngle(3);
+      roboticArm.shoulderServo.moveByAngle(-2);
     }
     if (isButtonDown[ButtonID::BUTTON_BACKWARD])
     {
-      roboticArm.moveSoulderByAngle(-3);
+      roboticArm.shoulderServo.moveByAngle(2);
     }
 
     if (isButtonDown[ButtonID::BUTTON_RIGHT])
     {
-      roboticArm.moveBaseByAngle(-3);
+      roboticArm.baseServo.moveByAngle(-3);
     }
     if (isButtonDown[ButtonID::BUTTON_LEFT])
     {
-      roboticArm.moveBaseByAngle(3);
+      roboticArm.baseServo.moveByAngle(3);
     }
 
     if (isButtonDown[ButtonID::BUTTON_UP])
     {
-      roboticArm.moveElbowByAngle(3);
+      roboticArm.elbowServo.moveByAngle(3);
     }
     if (isButtonDown[ButtonID::BUTTON_DOWN])
     {
-      roboticArm.moveElbowByAngle(-3);
+      roboticArm.elbowServo.moveByAngle(-3);
     }
 
     if (isButtonDown[ButtonID::BUTTON_GRIPPER_OPEN])
     {
-      roboticArm.moveGripperByAngle(3);
+      roboticArm.gripperServo.moveByAngle(5);
     }
     if (isButtonDown[ButtonID::BUTTON_GRIPPER_CLOSE])
     {
-      roboticArm.moveGripperByAngle(-3);
+      roboticArm.gripperServo.moveByAngle(-5);
     }
 
     timeServoUpdate = millis();
