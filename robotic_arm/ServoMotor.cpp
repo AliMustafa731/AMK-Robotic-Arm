@@ -1,6 +1,21 @@
 
 #include "ServoMotor.h"
 
+//---------------------------------
+// Initialize the Servo Motor
+//---------------------------------
+void ServoMotor::begin(int _pinNumber, Adafruit_PWMServoDriver* _pwmDriver, int pwm_min = 0, int pwm_max = 0, float angle_min = 0, float angle_max = 0)
+{
+  this->pinNumber = _pinNumber;
+  this->pwmDriver = _pwmDriver;
+  this->angle = 0;
+  this->pwm = 0;
+  this->min_angle = 0;
+  this->max_angle = 180;
+
+  setRanges(pwm_min, pwm_max, angle_min, angle_max);
+}
+
 //-------------------------------------------------
 //  Set the ranges for (PWM-to-Angle) Conversions
 //-------------------------------------------------
@@ -13,13 +28,21 @@ void ServoMotor::setRanges(int pwm_min, int pwm_max, float angle_min, float angl
   this->zero = pwm_min - this->gain * angle_min;
 }
 
+void ServoMotor::setLimits(float _min_angle, float _max_angle)
+{
+  this->min_angle = _min_angle;
+  this->max_angle = _max_angle;
+}
+
 //----------------------------------------------------------------------
 // set the position of the servo from the given PWM (in microseconds)
 //----------------------------------------------------------------------
 void ServoMotor::setPositionPWM(int _pwm)
 {
-  this->pwm = _pwm;
-  this->angle = (float(this->pwm) - this->zero) / this->gain;
+  this->angle = (float(_pwm) - this->zero) / this->gain;
+  
+  angle = max(min_angle, min(angle, max_angle));
+  this->pwm = int(0.5f + this->zero + this->gain * this->angle);
 
   this->pwmDriver->setPWM(this->pinNumber, 0, this->pwm);
 }
@@ -29,14 +52,7 @@ void ServoMotor::setPositionPWM(int _pwm)
 //----------------------------------------------------------------------
 void ServoMotor::setPositionAngle(float _angle)
 {
-  if (_angle > 180)
-  {
-    _angle = 180;
-  }
-  if (_angle < 0)
-  {
-    _angle = 0;
-  }
+  _angle = max(min_angle, min(_angle, max_angle));
 
   this->angle = _angle;
   this->pwm = int(0.5f + this->zero + this->gain * this->angle);
