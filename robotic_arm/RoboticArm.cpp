@@ -11,13 +11,30 @@ void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int grippe
   pwmDriver.begin();
   pwmDriver.setPWMFreq(50);
 
+  setArmLengths(_L1, _L2, _L3, _L4);
+
   // initialize the servo motors
   baseServo.begin(base_pin, &pwmDriver);
   shoulderServo.begin(shoulder_pin, &pwmDriver);
   elbowServo.begin(elbow_pin, &pwmDriver);
   gripperServo.begin(gripper_pin, &pwmDriver);
 
-  setArmLengths(_L1, _L2, _L3, _L4);
+  // calibrate the servo motors for (PWM-to-Angle) Conversions (found by experimentation)
+  // DO NOT CHANGE THESE VALUES
+  baseServo.setRanges(116, 540, 0, 180);
+  shoulderServo.setRanges(537, 106, 0, 180);
+  elbowServo.setRanges(341, 553, 90, 180);
+  gripperServo.setRanges(120, 570, 0, 180);
+
+  // set the safe (max / min) limits of the servo angles (found by experimentation)
+  // DO NOT CHANGE THESE VALUES
+  baseServo.setLimits(0, 180);
+  shoulderServo.setLimits(40, 120);
+  elbowServo.setLimits(90, 180);
+  gripperServo.setLimits(70, 115);
+
+  // set initial position
+  moveToCylindrical(90, 160, 50);
 }
 
 //-------------------------------------------------

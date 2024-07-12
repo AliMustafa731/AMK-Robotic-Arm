@@ -42,7 +42,7 @@ public:
   //---------------------------------
   // Initialize the Robotic Arm
   //---------------------------------
-  void begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3, float _L4);
+  void begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1 = 140, float _L2 = 140, float _L3 = 10, float _L4 = 150);
 
   //--------------------------------------------------------------------
   //  Move the end-effector directly to the given position (x, y, z)

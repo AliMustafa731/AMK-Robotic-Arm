@@ -51,14 +51,6 @@ bool isReady = true;
 // a counter variable used to update the positions of the servo motors frequently
 unsigned long timeServoUpdate;
 
-void printArmInfo()
-{
-  Serial.println("X : " + String(roboticArm.getX()));
-  Serial.println("Y : " + String(roboticArm.getY()));
-  Serial.println("Z : " + String(roboticArm.getZ()));
-  //Serial.println("Theta : " + String(roboticArm.getTheta()));
-  Serial.println("Radius : " + String(roboticArm.getRadius()) + "\n\n");
-}
 
 //----------------------------
 //  Setup
@@ -67,34 +59,12 @@ void setup()
 {
   // initialize the Bluetooth module serial communication
   Bluetooth.begin(9600);
-  Serial.begin(9600);
 
   // initialize command queue
   commandQueue = ByteQueue(commandBuffer, sizeof(commandBuffer));
 
-  // initialize the robotic arm
-  // DO NOT CHANGE THESE VALUES
-  roboticArm.begin(
-    0, 1, 2, 3,  // servo motors pin numbers (Base, Shoulder, Elbow, Gripper)
-    140,         // L1 : Shoulder to elbow length (in millimeters)
-    140,         // L2 : Elbow to wrist length (in millimeters)
-    10,          // L3 : Length from wrist to hand PLUS base center to shoulder (in millimeters)
-    150          // L4 : Length from the top of the Gripper to the bottom (in millimeters)
-  );
-
-  // calibrate the servo motors for (PWM-to-Angle) Conversions
-  // DO NOT CHANGE THESE VALUES
-  roboticArm.baseServo.setRanges(116, 540, 0, 180);
-  roboticArm.shoulderServo.setRanges(537, 106, 0, 180);
-  roboticArm.elbowServo.setRanges(341, 553, 90, 180);
-  roboticArm.gripperServo.setRanges(120, 570, 0, 180);
-
-  // set (max / min) limits of the servo angles
-  // DO NOT CHANGE THESE VALUES
-  roboticArm.baseServo.setLimits(0, 180);
-  roboticArm.shoulderServo.setLimits(40, 120);
-  roboticArm.elbowServo.setLimits(90, 180);
-  roboticArm.gripperServo.setLimits(70, 115);
+  // initialize the robotic arm with servo pins numbers on the PCA9685 Servo Driver
+  roboticArm.begin(0, 1, 2, 3);
 
   // set initial position
   roboticArm.moveToCylindrical(90, 160, 50);
