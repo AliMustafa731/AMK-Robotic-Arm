@@ -16,12 +16,13 @@ private:
   float Theta, Radius;
 
   /*---------------------------------------------------------------------------------
-    Arm Lengths :
-    L1 : Shoulder to elbow length in millimeters
-    L2 : Elbow to wrist length in millimeters
-    L3 : Length from wrist to hand PLUS base centre to shoulder in millimeters
+    Arm Lengths (in millimeters) :
+    L1 : Shoulder to elbow length.
+    L2 : Elbow to wrist length.
+    L3 : Length from wrist to hand PLUS base centre to shoulder.
+    L4 : Length from the top of the Gripper to the bottom.
   ----------------------------------------------------------------------------------*/
-  float L1, L2, L3;
+  float L1, L2, L3, L4;
   
   // PCA9685 Servo Driver Handle
   Adafruit_PWMServoDriver pwmDriver;
@@ -41,7 +42,7 @@ public:
   //---------------------------------
   // Initialize the Robotic Arm
   //---------------------------------
-  void begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3);
+  void begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3, float _L4);
 
   //--------------------------------------------------------------------
   //  Move the end-effector directly to the given position (x, y, z)
@@ -67,7 +68,7 @@ public:
   //  Set the lengths of the arms (L1, L2 and L3),
   //  These lengths are used by kinematics calculations
   //--------------------------------------------------------------
-  void setArmLengths(float _L1, float _L2, float _L3);
+  void setArmLengths(float _L1, float _L2, float _L3, float _L4);
 
   //------------------------------------------------------------------------------
   // inverse kinematics, get joint's Angle's from the given position (x, y, z)
@@ -78,6 +79,15 @@ public:
   // forward kinematics, get end effector position (x, y, z) from the given joint's Angle's
   //---------------------------------------------------------------------------------------
   void unsolve(float a0, float a1, float a2, float& x, float& y, float& z);
+
+  //---------------------
+  // Getters
+  //---------------------
+  float getX();
+  float getY();
+  float getZ();
+  float getRadius();
+  float getTheta();
 };
 
 //---------------------------------------------------------

@@ -51,6 +51,15 @@ bool isReady = true;
 // a counter variable used to update the positions of the servo motors frequently
 unsigned long timeServoUpdate;
 
+void printArmInfo()
+{
+  Serial.println("X : " + String(roboticArm.getX()));
+  Serial.println("Y : " + String(roboticArm.getY()));
+  Serial.println("Z : " + String(roboticArm.getZ()));
+  //Serial.println("Theta : " + String(roboticArm.getTheta()));
+  Serial.println("Radius : " + String(roboticArm.getRadius()) + "\n\n");
+}
+
 //----------------------------
 //  Setup
 //----------------------------
@@ -58,6 +67,7 @@ void setup()
 {
   // initialize the Bluetooth module serial communication
   Bluetooth.begin(9600);
+  Serial.begin(9600);
 
   // initialize command queue
   commandQueue = ByteQueue(commandBuffer, sizeof(commandBuffer));
@@ -66,9 +76,10 @@ void setup()
   // DO NOT CHANGE THESE VALUES
   roboticArm.begin(
     0, 1, 2, 3,  // servo motors pin numbers (Base, Shoulder, Elbow, Gripper)
-    140,         // L1 : Shoulder to elbow length in millimeters
-    140,         // L2 : Elbow to wrist length in millimeters
-    10           // L3 : Length from wrist to hand PLUS base center to shoulder in millimeters
+    140,         // L1 : Shoulder to elbow length (in millimeters)
+    140,         // L2 : Elbow to wrist length (in millimeters)
+    10,          // L3 : Length from wrist to hand PLUS base center to shoulder (in millimeters)
+    150          // L4 : Length from the top of the Gripper to the bottom (in millimeters)
   );
 
   // calibrate the servo motors for (PWM-to-Angle) Conversions
@@ -82,14 +93,11 @@ void setup()
   // DO NOT CHANGE THESE VALUES
   roboticArm.baseServo.setLimits(0, 180);
   roboticArm.shoulderServo.setLimits(40, 120);
-  roboticArm.elbowServo.setLimits(0, 180);
+  roboticArm.elbowServo.setLimits(90, 180);
   roboticArm.gripperServo.setLimits(70, 115);
 
   // set initial position
-  roboticArm.baseServo.setPositionAngle(90);
-  roboticArm.shoulderServo.setPositionAngle(90);
-  roboticArm.elbowServo.setPositionAngle(180);
-  roboticArm.gripperServo.setPositionAngle(90);
+  roboticArm.moveToCylindrical(90, 160, 50);
 
   timeServoUpdate = millis();
 }
@@ -210,33 +218,33 @@ void loop()
   //---------------------------------------------------------------------------------------
   // Repeat every (100 milliseconds), to give the servo motors the chance to move smoothly
   //---------------------------------------------------------------------------------------
-  if (millis() - timeServoUpdate >= 100)
+  if (millis() - timeServoUpdate >= 60)
   {
     if (isButtonDown[ButtonID::BUTTON_FORWARD])
     {
-      roboticArm.shoulderServo.moveByAngle(-2);
+      roboticArm.moveByCylindrical(0, 5, 0);
     }
     if (isButtonDown[ButtonID::BUTTON_BACKWARD])
     {
-      roboticArm.shoulderServo.moveByAngle(2);
+      roboticArm.moveByCylindrical(0, -5, 0);
     }
 
     if (isButtonDown[ButtonID::BUTTON_RIGHT])
     {
-      roboticArm.baseServo.moveByAngle(-3);
+      roboticArm.moveByCylindrical(-3, 0, 0);
     }
     if (isButtonDown[ButtonID::BUTTON_LEFT])
     {
-      roboticArm.baseServo.moveByAngle(3);
+      roboticArm.moveByCylindrical(3, 0, 0);
     }
 
     if (isButtonDown[ButtonID::BUTTON_UP])
     {
-      roboticArm.elbowServo.moveByAngle(3);
+      roboticArm.moveByCylindrical(0, 0, 5);
     }
     if (isButtonDown[ButtonID::BUTTON_DOWN])
     {
-      roboticArm.elbowServo.moveByAngle(-3);
+      roboticArm.moveByCylindrical(0, 0, -5);
     }
 
     if (isButtonDown[ButtonID::BUTTON_GRIPPER_OPEN])

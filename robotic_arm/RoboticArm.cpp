@@ -4,7 +4,7 @@
 //---------------------------------
 // Initialize the Robotic Arm
 //---------------------------------
-void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3)
+void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3, float _L4)
 {
   // initialize the Servo Driver
   pwmDriver = Adafruit_PWMServoDriver(0x40);
@@ -17,7 +17,7 @@ void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int grippe
   elbowServo.begin(elbow_pin, &pwmDriver);
   gripperServo.begin(gripper_pin, &pwmDriver);
 
-  setArmLengths(_L1, _L2, _L3);
+  setArmLengths(_L1, _L2, _L3, _L4);
 }
 
 //-------------------------------------------------
@@ -51,14 +51,27 @@ void RoboticArm::moveBy(float x, float y, float z)
 //---------------------------------------------------------------------------------------
 void RoboticArm::moveToCylindrical(float theta, float radius, float z)
 {
-  this->Theta = theta;
-  this->Radius = radius;
+  theta = max(0, min(theta, 180));
+  radius = max(110, min(radius, 220));
+  z = max(-100, min(z, -25));
 
   float x, y;
 
-  polar2cart(radius, theta, x, y);
+  polar2cart(radius, DEG_TO_RAD(theta), x, y);
 
-  moveTo(x, y, z);
+  float baseAngle, shoulderAngle, elbowAngle;
+
+  if (solve(x, y, z, baseAngle, shoulderAngle, elbowAngle))
+  {
+    baseServo.setPositionAngle(baseAngle);
+    shoulderServo.setPositionAngle(shoulderAngle);
+    elbowServo.setPositionAngle(elbowAngle);
+    this->mX = x;
+    this->mY = y;
+    this->mZ = z;
+    this->Theta = theta;
+    this->Radius = radius;
+  }
 }
 
 //--------------------------------------------------------------------------------------------
@@ -73,23 +86,36 @@ void RoboticArm::moveByCylindrical(float theta, float radius, float z)
 //  Set the lengths of the arms (L1, L2 and L3),
 //  These lengths are used by inverse kinematics calculations
 //--------------------------------------------------------------
-void RoboticArm::setArmLengths(float _L1, float _L2, float _L3)
+void RoboticArm::setArmLengths(float _L1, float _L2, float _L3, float _L4)
 {
   this->L1 = _L1;
   this->L2 = _L2;
   this->L3 = _L3;
+  this->L4 = _L4;
 }
+
+//---------------------
+// Getters
+//---------------------
+float RoboticArm::getX() { return this->mX; }
+float RoboticArm::getY() { return this->mY; }
+float RoboticArm::getZ() { return this->mZ; }
+float RoboticArm::getRadius() { return this->Radius; }
+float RoboticArm::getTheta() { return this->Theta; }
 
 //------------------------------------------------------------------------------
 // inverse kinematics, get joint's Angle's from the given position (x, y, z)
 //------------------------------------------------------------------------------
 bool RoboticArm::solve(float x, float y, float z, float& a0, float& a1, float& a2)
 {
+  // Account for the gripper height
+  z += L4;
+
   // Solve top-down view
   float r, theta;
   cart2polar(x, y, r, theta);
 
-  // Account for the wrist length!
+  // Account for the wrist length
   r -= L3;
 
   // In arm plane, convert to polar
@@ -130,7 +156,7 @@ void RoboticArm::unsolve(float a0, float a1, float a2, float& x, float& y, float
 
   // Calculate in 3D space
   polar2cart(u, a0, x, y);
-  z = v;
+  z = v - L4;
 }
 
 //-------------------------------------------------------
