@@ -11,7 +11,7 @@ class ByteQueue
 private:
 
   uint8_t* data;   // pointer for the Bytes Array
-  size_t length;     // number of elements (Bytes) inserted to the Queue
+  size_t length;   // number of elements (Bytes) inserted to the Queue
   size_t capacity; // the size of the Array pointed by (data)
   size_t current;  // current index of the last inserted element (Byte)
 
@@ -37,12 +37,12 @@ public:
   void enqueue(uint8_t byte);
 
   //-------------------------------------------------
-  //  Get / Remove a Chunk of Bytes into the Queue
+  //  Get / Remove a Chunk of Bytes from the Queue
   //-------------------------------------------------
   void dequeue(uint8_t* dest, size_t len);
 
   //---------------------------------------------------
-  //  Get / Remove a single Byte Bytes into the Queue
+  //  Get / Remove a single Byte from the Queue
   //---------------------------------------------------
   uint8_t dequeue();
 

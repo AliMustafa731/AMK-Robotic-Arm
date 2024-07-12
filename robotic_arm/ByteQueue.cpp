@@ -4,14 +4,14 @@
 //---------------------------------------------
 //  Insert a Chunk of Bytes into the Queue
 //---------------------------------------------
-void ByteQueue::enqueue(uint8_t* _data, size_t len)
+void ByteQueue::enqueue(uint8_t* src, size_t len)
 {
   if(this->free_space() >= len)
   {
     for(size_t i = 0 ; i < len ; i++)
     {
       size_t avail = (this->current + this->length) % this->capacity;
-      this->data[avail] = _data[i];
+      this->data[avail] = src[i];
       this->length++;
     }
   }
@@ -31,15 +31,15 @@ void ByteQueue::enqueue(uint8_t byte)
 }
 
 //-------------------------------------------------
-//  Get / Remove a Chunk of Bytes into the Queue
+//  Get / Remove a Chunk of Bytes from the Queue
 //-------------------------------------------------
-void ByteQueue::dequeue(uint8_t* _data, size_t len)
+void ByteQueue::dequeue(uint8_t* dest, size_t len)
 {
   if(this->size() >= len)
   {
     for(size_t i = 0 ; i < len ; i++)
     {
-      _data[i] = this->data[this->current];
+      dest[i] = this->data[this->current];
       this->current = (this->current + 1) % this->capacity;
       this->length--;
     }
@@ -47,7 +47,7 @@ void ByteQueue::dequeue(uint8_t* _data, size_t len)
 }
 
 //---------------------------------------------------
-//  Get / Remove a single Byte Bytes into the Queue
+//  Get / Remove a single Byte from the Queue
 //---------------------------------------------------
 uint8_t ByteQueue::dequeue()
 {
