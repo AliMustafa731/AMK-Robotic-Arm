@@ -4,16 +4,15 @@
 //---------------------------------
 // Initialize the Servo Motor
 //---------------------------------
-void ServoMotor::begin(int _pinNumber, Adafruit_PWMServoDriver* _pwmDriver, int pwm_min = 0, int pwm_max = 0, float angle_min = 0, float angle_max = 0)
+void ServoMotor::begin(int _pinNumber, Adafruit_PWMServoDriver* _pwmDriver, int pwm_min, int pwm_max, float angle_min, float angle_max)
 {
   this->pinNumber = _pinNumber;
   this->pwmDriver = _pwmDriver;
   this->angle = 0;
   this->pwm = 0;
-  this->min_angle = 0;
-  this->max_angle = 180;
 
   setRanges(pwm_min, pwm_max, angle_min, angle_max);
+  setLimits(0, 180);
 }
 
 //-------------------------------------------------
@@ -28,6 +27,9 @@ void ServoMotor::setRanges(int pwm_min, int pwm_max, float angle_min, float angl
   this->zero = pwm_min - this->gain * angle_min;
 }
 
+//-------------------------------------------------
+// set the safe (min / max) limits of the servo
+//-------------------------------------------------
 void ServoMotor::setLimits(float _min_angle, float _max_angle)
 {
   this->min_angle = _min_angle;
@@ -41,7 +43,7 @@ void ServoMotor::setPositionPWM(int _pwm)
 {
   this->angle = (float(_pwm) - this->zero) / this->gain;
   
-  angle = max(min_angle, min(angle, max_angle));
+  this->angle = max(min_angle, min(angle, max_angle));
   this->pwm = int(0.5f + this->zero + this->gain * this->angle);
 
   this->pwmDriver->setPWM(this->pinNumber, 0, this->pwm);
@@ -79,23 +81,8 @@ void ServoMotor::moveByAngle(float _angle)
 //-----------------------------------------------
 //  Setters and Getters
 //-----------------------------------------------
-void ServoMotor::setPin(int _pinNumber)
-{
-  this->pinNumber = _pinNumber;
-}
-
-int ServoMotor::getPin()
-{
-  return this->pinNumber;
-}
-
-float ServoMotor::getAngle()
-{
-  return this->angle;
-}
-
-int ServoMotor::getPWM()
-{
-  return this->pwm;
-}
+void ServoMotor::setPin(int _pinNumber) { this->pinNumber = _pinNumber; }
+float ServoMotor::getAngle() { return this->angle; }
+int ServoMotor::getPin() { return this->pinNumber; }
+int ServoMotor::getPWM() { return this->pwm; }
 

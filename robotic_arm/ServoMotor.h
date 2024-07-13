@@ -37,6 +37,9 @@ public:
   //-------------------------------------------------
   void setRanges(int pwm_min, int pwm_max, float angle_min, float angle_max);
 
+  //-------------------------------------------------
+  // set the safe (min / max) limits of the servo
+  //-------------------------------------------------
   void setLimits(float _min_angle, float _max_angle);
 
   //----------------------------------------------------------------------
@@ -62,10 +65,10 @@ public:
   //-----------------------------------------------
   //  Setters and Getters
   //-----------------------------------------------
-  void  setPin(int _pinNumber);
-  int   getPin();
+  void setPin(int _pinNumber);
   float getAngle();
-  int   getPWM();
+  int getPin();
+  int getPWM();
 };
 
 #endif  // SERVO_MOTOR_H
