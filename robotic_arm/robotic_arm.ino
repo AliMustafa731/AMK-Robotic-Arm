@@ -81,9 +81,9 @@ void loop()
   //----------------------------------------------------------------
   while(Bluetooth.available() > 0 && commandQueue.free_space() > 0)
   {
-    uint8_t data = Bluetooth.read();
+    uint8_t byte = Bluetooth.read();
 
-    commandQueue.enqueue(data);
+    commandQueue.write(byte);
   }
 
   //-------------------------------------------------------
@@ -91,7 +91,7 @@ void loop()
   //-------------------------------------------------------
   if (isReady && commandQueue.size() > 0)
   {
-    command = commandQueue.dequeue();
+    command = commandQueue.nextByte();
 
     isReady = false;
   }
@@ -105,7 +105,7 @@ void loop()
     // this command is expected to be sent with additional (1 byte), representing the ID of the button
     if (commandQueue.size() >= 1)
     {
-      int8_t button_id = commandQueue.dequeue();
+      int8_t button_id = commandQueue.nextByte();
 
       // button is held down
       isButtonDown[button_id] = true;
@@ -119,7 +119,7 @@ void loop()
     // this command is expected to be sent with additional (1 byte), representing the ID of the button
     if (commandQueue.size() >= 1)
     {
-      int8_t button_id = commandQueue.dequeue();
+      int8_t button_id = commandQueue.nextByte();
 
       // button is left up
       isButtonDown[button_id] = false;
@@ -141,15 +141,10 @@ void loop()
     // 4th (2 bytes) : 16-bit value of (Gripper) angle
     if (commandQueue.size() >= 8)
     {
-      int16_t theta;
-      int16_t radius;
-      int16_t z;
-      int16_t gripper_angle;
-
-      commandQueue.dequeue((uint8_t*)&theta, sizeof(int16_t));
-      commandQueue.dequeue((uint8_t*)&radius, sizeof(int16_t));
-      commandQueue.dequeue((uint8_t*)&z, sizeof(int16_t));
-      commandQueue.dequeue((uint8_t*)&gripper_angle, sizeof(int16_t));
+      int16_t theta = commandQueue.nextInt_2_Bytes();
+      int16_t radius = commandQueue.nextInt_2_Bytes();
+      int16_t z = commandQueue.nextInt_2_Bytes();
+      int16_t gripper_angle = commandQueue.nextInt_2_Bytes();
 
       roboticArm.moveToCylindrical(theta, radius, z);
       roboticArm.gripperServo.setPositionAngle(gripper_angle);

@@ -4,7 +4,7 @@
 //---------------------------------------------
 //  Insert a Chunk of Bytes into the Queue
 //---------------------------------------------
-void ByteQueue::enqueue(uint8_t* src, size_t len)
+void ByteQueue::write(uint8_t* src, size_t len)
 {
   if(this->free_space() >= len)
   {
@@ -20,7 +20,7 @@ void ByteQueue::enqueue(uint8_t* src, size_t len)
 //---------------------------------------------
 //  Insert a single Byte into the Queue
 //---------------------------------------------
-void ByteQueue::enqueue(uint8_t byte)
+void ByteQueue::write(uint8_t byte)
 {
   if(this->free_space() != 0)
   {
@@ -33,7 +33,7 @@ void ByteQueue::enqueue(uint8_t byte)
 //-------------------------------------------------
 //  Get / Remove a Chunk of Bytes from the Queue
 //-------------------------------------------------
-void ByteQueue::dequeue(uint8_t* dest, size_t len)
+void ByteQueue::read(uint8_t* dest, size_t len)
 {
   if(this->size() >= len)
   {
@@ -49,7 +49,7 @@ void ByteQueue::dequeue(uint8_t* dest, size_t len)
 //---------------------------------------------------
 //  Get / Remove a single Byte from the Queue
 //---------------------------------------------------
-uint8_t ByteQueue::dequeue()
+uint8_t ByteQueue::read()
 {
   if(this->size() != 0)
   {
@@ -60,6 +60,36 @@ uint8_t ByteQueue::dequeue()
   }
 
   return 0;
+}
+
+//----------------------------------------
+//  Get Common Data Types from the Queue
+//----------------------------------------
+int8_t ByteQueue::nextByte()
+{
+  int8_t result;
+
+  this->read((uint8_t*) &result, 1);
+
+  return result;
+}
+
+int16_t ByteQueue::nextInt_2_Bytes()
+{
+  int16_t result;
+
+  this->read((uint8_t*) &result, 2);
+
+  return result;
+}
+
+int32_t ByteQueue::nextInt_4_Bytes()
+{
+  int32_t result;
+
+  this->read((uint8_t*) &result, 4);
+
+  return result;
 }
 
 //-----------------------------------

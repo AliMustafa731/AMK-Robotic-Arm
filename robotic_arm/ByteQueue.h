@@ -29,22 +29,29 @@ public:
   //---------------------------------------------
   //  Insert a Chunk of Bytes into the Queue
   //---------------------------------------------
-  void enqueue(uint8_t* src, size_t len);
+  void write(uint8_t* src, size_t len);
 
   //---------------------------------------------
   //  Insert a single Byte into the Queue
   //---------------------------------------------
-  void enqueue(uint8_t byte);
+  void write(uint8_t byte);
 
   //-------------------------------------------------
   //  Get / Remove a Chunk of Bytes from the Queue
   //-------------------------------------------------
-  void dequeue(uint8_t* dest, size_t len);
+  void read(uint8_t* dest, size_t len);
 
   //---------------------------------------------------
   //  Get / Remove a single Byte from the Queue
   //---------------------------------------------------
-  uint8_t dequeue();
+  uint8_t read();
+
+  //----------------------------------------
+  //  Get Common Data Types from the Queue
+  //----------------------------------------
+  int8_t nextByte();
+  int16_t nextInt_2_Bytes();
+  int32_t nextInt_4_Bytes();
 
   //-----------------------------------
   // number of elemnts in the Queue
