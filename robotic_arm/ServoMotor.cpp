@@ -9,36 +9,35 @@
 //---------------------------------
 // Initialize the Servo Motor
 //---------------------------------
-void ServoMotor::begin(int _pinNumber, Adafruit_PWMServoDriver* _pwmDriver, int pwm_min, int pwm_max, float angle_min, float angle_max)
+void ServoMotor::begin(int _pinNumber, Adafruit_PWMServoDriver* _pwmDriver, float _min_pwm, float _max_pwm, float _min_angle, float _max_angle)
 {
   this->pinNumber = _pinNumber;
   this->pwmDriver = _pwmDriver;
   this->angle = 0;
   this->pwm = 0;
 
-  setRanges(pwm_min, pwm_max, angle_min, angle_max);
-  setLimits(0, 180);
+  setRanges(_min_pwm, _max_pwm, _min_angle, _max_angle);
+  setLimits(-45, 225);
 }
 
 //-------------------------------------------------
 //  Set the ranges for (PWM-to-Angle) Conversions
 //-------------------------------------------------
-void ServoMotor::setRanges(int pwm_min, int pwm_max, float angle_min, float angle_max)
+void ServoMotor::setRanges(float _min_pwm, float _max_pwm, float _min_angle, float _max_angle)
 {
-  float pwm_range = pwm_max - pwm_min;
-  float angle_range = angle_max - angle_min;
-
-  this->gain = pwm_range / angle_range;
-  this->zero = pwm_min - this->gain * angle_min;
+  this->min_pwm = _min_pwm;
+  this->max_pwm = _max_pwm;
+  this->min_angle = _min_angle;
+  this->max_angle = _max_angle;
 }
 
 //-------------------------------------------------
 // set the safe (min / max) limits of the servo
 //-------------------------------------------------
-void ServoMotor::setLimits(float _min_angle, float _max_angle)
+void ServoMotor::setLimits(float _min_sweep_angle, float _max_sweep_angle)
 {
-  this->min_angle = _min_angle;
-  this->max_angle = _max_angle;
+  this->min_sweep_angle = _min_sweep_angle;
+  this->max_sweep_angle = _max_sweep_angle;
 }
 
 //----------------------------------------------------------------------
@@ -46,11 +45,16 @@ void ServoMotor::setLimits(float _min_angle, float _max_angle)
 //----------------------------------------------------------------------
 void ServoMotor::setPositionPWM(int _pwm)
 {
-  this->angle = (float(_pwm) - this->zero) / this->gain;
+  // convert PWM to Angle
+  this->angle = min_angle + (float(_pwm) - min_pwm) * (max_angle - min_angle) / (max_pwm - min_pwm);
   
-  this->angle = max(min_angle, min(angle, max_angle));
-  this->pwm = int(0.5f + this->zero + this->gain * this->angle);
+  // limit the angle
+  this->angle = max(min_sweep_angle, min(angle, max_sweep_angle));
 
+  // convert Angle back to PWM after limiting
+  this->pwm = int(min_pwm + (this->angle - min_angle) * (max_pwm - min_pwm) / (max_angle - min_angle));
+
+  // set PWM position of the servo on the PCA9685 Servo Driver
   this->pwmDriver->setPWM(this->pinNumber, 0, this->pwm);
 }
 
@@ -59,11 +63,13 @@ void ServoMotor::setPositionPWM(int _pwm)
 //----------------------------------------------------------------------
 void ServoMotor::setPositionAngle(float _angle)
 {
-  _angle = max(min_angle, min(_angle, max_angle));
+  // limit the angle
+  this->angle = max(min_sweep_angle, min(_angle, max_sweep_angle));
 
-  this->angle = _angle;
-  this->pwm = int(0.5f + this->zero + this->gain * this->angle);
+  // convert Angle to PWM
+  this->pwm = int(min_pwm + (this->angle - min_angle) * (max_pwm - min_pwm) / (max_angle - min_angle));
 
+  // set PWM position of the servo on the PCA9685 Servo Driver
   this->pwmDriver->setPWM(this->pinNumber, 0, this->pwm);
 }
 

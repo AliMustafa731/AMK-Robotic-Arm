@@ -11,28 +11,23 @@
 //---------------------------------
 void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3, float _L4)
 {
-  // initialize the Servo Driver
+  // initialize the PCA9685 Servo Driver
   pwmDriver = Adafruit_PWMServoDriver(0x40);
   pwmDriver.begin();
   pwmDriver.setPWMFreq(50);
 
   setArmLengths(_L1, _L2, _L3, _L4);
 
-  // set the safe (min / max) limits of reachable  positions (in Cylindrical coordinates) (found by experimentation)
+  // set the safe (min / max) limits of reachable  positions (in cylindrical coordinates) (found by experimentation)
   setLimitsCylindrical(0, 180, 110, 220, -100, -25);
 
   // initialize the servo motors
-  baseServo.begin(base_pin, &pwmDriver);
-  shoulderServo.begin(shoulder_pin, &pwmDriver);
-  elbowServo.begin(elbow_pin, &pwmDriver);
-  gripperServo.begin(gripper_pin, &pwmDriver);
-
-  // calibrate the servo motors for (PWM-to-Angle) Conversions (found by experimentation)
+  // with calibration values of the servo motors for (PWM-to-Angle) Conversions (found by experimentation)
   // DO NOT CHANGE THESE VALUES
-  baseServo.setRanges(116, 540, 0, 180);
-  shoulderServo.setRanges(537, 106, 0, 180);
-  elbowServo.setRanges(341, 553, 90, 180);
-  gripperServo.setRanges(120, 570, 0, 180);
+  baseServo.begin(base_pin, &pwmDriver, 116, 540, 0, 180);
+  shoulderServo.begin(shoulder_pin, &pwmDriver, 537, 106, 0, 180);
+  elbowServo.begin(elbow_pin, &pwmDriver, 341, 553, 90, 180);
+  gripperServo.begin(gripper_pin, &pwmDriver, 120, 570, 0, 180);
 
   // set the safe (min / max) limits of the servo angles (found by experimentation)
   // DO NOT CHANGE THESE VALUES
