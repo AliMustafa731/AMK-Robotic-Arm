@@ -7,19 +7,18 @@
 #include "ByteQueue.h"
 
 
-// Android app commands ID's, set to the same values in the android app
+// Android App commands ID's, set to the same values in the Android App
 enum Command
 {
-  SET_PWM = 1,
-  SET_ANGLE = 2,
-  BUTTON_PRESSED = 3,
-  BUTTON_RELEASED = 4
+  SET_POSITION = 1,
+  BUTTON_PRESSED = 2,
+  BUTTON_RELEASED = 3
 };
 
-// an array containing the state for each of the (8) buttons in android app
+// an array containing the state for each of the (8) buttons in Android App
 bool isButtonDown[8];
 
-// Android app buttons ID's, used as index to the above array "isButtonDown"
+// Android App buttons ID's, used as index to the above array "isButtonDown"
 enum ButtonID
 {
   BUTTON_FORWARD = 0,
@@ -83,6 +82,7 @@ void loop()
   while(Bluetooth.available() > 0 && commandQueue.free_space() > 0)
   {
     uint8_t data = Bluetooth.read();
+
     commandQueue.enqueue(data);
   }
 
@@ -97,7 +97,7 @@ void loop()
   }
   
   //----------------------------------------------------------------------------------------
-  // set the state of each button depending on the recived command from the Android app,
+  // set the state of each button depending on the recived command from the Android App,
   // the Android App sends this command whenever a (Joystick) button is pressed.
   //----------------------------------------------------------------------------------------
   if (command == Command::BUTTON_PRESSED)
@@ -107,8 +107,10 @@ void loop()
     {
       int8_t button_id = commandQueue.dequeue();
 
+      // button is held down
       isButtonDown[button_id] = true;
 
+      // ready for the next command
       isReady = true;
     }
   }
@@ -119,66 +121,40 @@ void loop()
     {
       int8_t button_id = commandQueue.dequeue();
 
+      // button is left up
       isButtonDown[button_id] = false;
 
+      // ready for the next command
       isReady = true;
     }
   }
-  //-----------------------------------------------------------------------
-  // set the PWM or Angle positions of the servo motors,
+  //------------------------------------------------------------------------------------------
+  // set the Position of the end-effector fo the Robotic Arm (in cylindrical coordinates),
   // the Android App sends this command when (Sliders) are changed.
-  //-----------------------------------------------------------------------
-  else if (command == Command::SET_ANGLE)
+  //------------------------------------------------------------------------------------------
+  else if (command == Command::SET_POSITION)
   {
     // this command is expected to be sent with additional (8 bytes),
-    // 1st (2 bytes) : 16-bit value of (Base) angle
-    // 2nd (2 bytes) : 16-bit value of (Shoulder) angle
-    // 3rd (2 bytes) : 16-bit value of (Elbow) angle
+    // 1st (2 bytes) : 16-bit value of Base angle (Theta)
+    // 2nd (2 bytes) : 16-bit value of Radius
+    // 3rd (2 bytes) : 16-bit value of Height (Z)
     // 4th (2 bytes) : 16-bit value of (Gripper) angle
     if (commandQueue.size() >= 8)
     {
-      int16_t base_angle;
-      int16_t shoulder_angle;
-      int16_t elbow_angle;
+      int16_t theta;
+      int16_t radius;
+      int16_t z;
       int16_t gripper_angle;
 
-      commandQueue.dequeue((uint8_t*)&base_angle, sizeof(int16_t));
-      commandQueue.dequeue((uint8_t*)&shoulder_angle, sizeof(int16_t));
-      commandQueue.dequeue((uint8_t*)&elbow_angle, sizeof(int16_t));
+      commandQueue.dequeue((uint8_t*)&theta, sizeof(int16_t));
+      commandQueue.dequeue((uint8_t*)&radius, sizeof(int16_t));
+      commandQueue.dequeue((uint8_t*)&z, sizeof(int16_t));
       commandQueue.dequeue((uint8_t*)&gripper_angle, sizeof(int16_t));
 
-      roboticArm.baseServo.setPositionAngle(float(base_angle));
-      roboticArm.shoulderServo.setPositionAngle(float(shoulder_angle));
-      roboticArm.elbowServo.setPositionAngle(float(elbow_angle));
-      roboticArm.gripperServo.setPositionAngle(float(gripper_angle));
+      roboticArm.moveToCylindrical(theta, radius, z);
+      roboticArm.gripperServo.setPositionAngle(gripper_angle);
 
-      isReady = true;
-    }
-  }
-  else if (command == Command::SET_PWM)
-  {
-    // this command is expected to be sent with additional (8 bytes),
-    // 1st (2 bytes) : 16-bit value of (Base) pwm
-    // 2nd (2 bytes) : 16-bit value of (Shoulder) pwm
-    // 3rd (2 bytes) : 16-bit value of (Elbow) pwm
-    // 4th (2 bytes) : 16-bit value of (Gripper) pwm
-    if (commandQueue.size() >= 8)
-    {
-      int16_t base_pwm;
-      int16_t shoulder_pwm;
-      int16_t elbow_pwm;
-      int16_t gripper_pwm;
-
-      commandQueue.dequeue((uint8_t*)&base_pwm, sizeof(int16_t));
-      commandQueue.dequeue((uint8_t*)&shoulder_pwm, sizeof(int16_t));
-      commandQueue.dequeue((uint8_t*)&elbow_pwm, sizeof(int16_t));
-      commandQueue.dequeue((uint8_t*)&gripper_pwm, sizeof(int16_t));
-
-      roboticArm.baseServo.setPositionPWM(base_pwm);
-      roboticArm.shoulderServo.setPositionPWM(shoulder_pwm);
-      roboticArm.elbowServo.setPositionPWM(elbow_pwm);
-      roboticArm.gripperServo.setPositionPWM(gripper_pwm);
-
+      // ready for the next command
       isReady = true;
     }
   }
@@ -186,7 +162,7 @@ void loop()
   //-----------------------------------------------------------------
   // move the robotic arm depending on which buttons are held down
   //---------------------------------------------------------------------------------------
-  // Repeat every (100 milliseconds), to give the servo motors the chance to move smoothly
+  // Repeat every (60 milliseconds), to give the servo motors the chance to move smoothly
   //---------------------------------------------------------------------------------------
   if (millis() - timeServoUpdate >= 60)
   {
