@@ -15,6 +15,9 @@ private:
   float mX, mY, mZ;
   float Theta, Radius;
 
+  // safe (min / max) limits of positions that can be reached (in Cylindrical coordinates) (found by experimentation)
+  float min_theta, max_theta, min_radius, max_radius, min_Z, max_Z;
+
   /*---------------------------------------------------------------------------------
     Arm Lengths (in millimeters) :
     L1 : Shoulder to elbow length.
@@ -69,6 +72,11 @@ public:
   //  These lengths are used by kinematics calculations
   //--------------------------------------------------------------
   void setArmLengths(float _L1, float _L2, float _L3, float _L4);
+
+  //---------------------------------------------------------------------------------------------
+  // set safe (min / max) limits of positions that can be reached (found by experimentation)
+  //---------------------------------------------------------------------------------------------
+  void setLimitsCylindrical(float min_theta, float max_theta, float min_radius, float max_radius, float min_z, float max_z);
 
   //------------------------------------------------------------------------------
   // inverse kinematics, get joint's Angle's from the given position (x, y, z)

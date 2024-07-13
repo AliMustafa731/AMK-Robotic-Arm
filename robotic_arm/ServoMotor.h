@@ -15,6 +15,7 @@ private:
   float gain;   // PWM per Degree
   float zero;   // Theoretical PWM for zero Angle
 
+  // safe (min / max) limits of angles that can be reached (found by experimentation)
   float min_angle, max_angle;
 
   // PCA9685 Servo Driver Handle

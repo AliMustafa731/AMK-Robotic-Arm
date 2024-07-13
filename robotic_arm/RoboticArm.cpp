@@ -13,6 +13,9 @@ void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int grippe
 
   setArmLengths(_L1, _L2, _L3, _L4);
 
+  // set the safe (min / max) limits of reachable  positions (in Cylindrical coordinates) (found by experimentation)
+  setLimitsCylindrical(0, 180, 110, 220, -100, -25);
+
   // initialize the servo motors
   baseServo.begin(base_pin, &pwmDriver);
   shoulderServo.begin(shoulder_pin, &pwmDriver);
@@ -26,7 +29,7 @@ void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int grippe
   elbowServo.setRanges(341, 553, 90, 180);
   gripperServo.setRanges(120, 570, 0, 180);
 
-  // set the safe (max / min) limits of the servo angles (found by experimentation)
+  // set the safe (min / max) limits of the servo angles (found by experimentation)
   // DO NOT CHANGE THESE VALUES
   baseServo.setLimits(0, 180);
   shoulderServo.setLimits(40, 120);
@@ -37,22 +40,19 @@ void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int grippe
   moveToCylindrical(90, 160, 50);
 }
 
-//-------------------------------------------------
-//  Move directly to the given position
-//-------------------------------------------------
+//-----------------------------------------------------------------------
+//  Move directly to the given position (in Cartesian coordinates)
+//-----------------------------------------------------------------------
 void RoboticArm::moveTo(float x, float y, float z)
 {
-  float baseAngle, shoulderAngle, elbowAngle;
+  float radius, theta;
 
-  if (solve(x, y, z, baseAngle, shoulderAngle, elbowAngle))
-  {
-    baseServo.setPositionAngle(baseAngle);
-    shoulderServo.setPositionAngle(shoulderAngle);
-    elbowServo.setPositionAngle(elbowAngle);
-    this->mX = x;
-    this->mY = y;
-    this->mZ = z;
-  }
+  // convert to polar coordinates
+  cart2polar(x, y, radius, theta);
+  
+  theta = RAD_TO_DEG(theta);
+
+  moveToCylindrical(theta, radius, z);
 }
 
 //----------------------------------------------------------------------------
@@ -68,15 +68,15 @@ void RoboticArm::moveBy(float x, float y, float z)
 //---------------------------------------------------------------------------------------
 void RoboticArm::moveToCylindrical(float theta, float radius, float z)
 {
-  theta = max(0, min(theta, 180));
-  radius = max(110, min(radius, 220));
-  z = max(-100, min(z, -25));
+  // safety limit
+  theta = max(min_theta, min(theta, max_theta));
+  radius = max(min_radius, min(radius, max_radius));
+  z = max(min_Z, min(z, max_Z));
 
+  float baseAngle, shoulderAngle, elbowAngle;
   float x, y;
 
   polar2cart(radius, DEG_TO_RAD(theta), x, y);
-
-  float baseAngle, shoulderAngle, elbowAngle;
 
   if (solve(x, y, z, baseAngle, shoulderAngle, elbowAngle))
   {
@@ -109,6 +109,19 @@ void RoboticArm::setArmLengths(float _L1, float _L2, float _L3, float _L4)
   this->L2 = _L2;
   this->L3 = _L3;
   this->L4 = _L4;
+}
+
+//---------------------------------------------------------------------------------------------
+// set safe (min / max) limits of positions that can be reached (found by experimentation)
+//---------------------------------------------------------------------------------------------
+void RoboticArm::setLimitsCylindrical(float min_theta, float max_theta, float min_radius, float max_radius, float min_z, float max_z)
+{
+  this->min_theta = min_theta;
+  this->max_theta = max_theta;
+  this->min_radius = min_radius;
+  this->max_radius = max_radius;
+  this->min_Z = min_z;
+  this->max_Z = max_z;
 }
 
 //---------------------
