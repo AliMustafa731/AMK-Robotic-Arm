@@ -1,3 +1,9 @@
+/*
+  Robotic Arm using Arduino & Bluetooth
+  By : Ali Mustafa Kamel, 2024 Feb-July
+*/
+
+
 #ifndef BYTE_QUEUE_H
 #define BYTE_QUEUE_H
 

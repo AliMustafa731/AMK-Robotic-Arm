@@ -1,3 +1,9 @@
+/*
+  Robotic Arm using Arduino & Bluetooth
+  By : Ali Mustafa Kamel, 2024 Feb-July
+*/
+
+
 #ifndef ROBOTIC_ARM_H
 #define ROBOTIC_ARM_H
 

@@ -1,3 +1,8 @@
+/*
+  Robotic Arm using Arduino & Bluetooth
+  By : Ali Mustafa Kamel, 2024 Feb-July
+*/
+
 
 #include "ByteQueue.h"
 

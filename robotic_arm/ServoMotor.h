@@ -1,3 +1,9 @@
+/*
+  Robotic Arm using Arduino & Bluetooth
+  By : Ali Mustafa Kamel, 2024 Feb-July
+*/
+
+
 #ifndef SERVO_MOTOR_H
 #define SERVO_MOTOR_H
 
