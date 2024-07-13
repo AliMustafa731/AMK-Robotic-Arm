@@ -71,7 +71,7 @@ void setup()
   roboticArm.begin(0, 1, 2, 3);
 
   // set initial position
-  roboticArm.moveToCylindrical(90, 160, 50);
+  roboticArm.moveToCylindrical(90, 160, -25);
 
   timeServoUpdate = millis();
 }
@@ -152,7 +152,7 @@ void loop()
       int16_t gripper_angle = commandQueue.nextInt_2_Bytes();
 
       roboticArm.moveToCylindrical(theta, radius, z);
-      roboticArm.gripperServo.setPositionAngle(gripper_angle);
+      roboticArm.setGripperAngle(gripper_angle);
 
       // ready for the next command
       isReady = true;
@@ -177,11 +177,11 @@ void loop()
 
     if (isButtonDown[ButtonID::BUTTON_RIGHT])
     {
-      roboticArm.moveByCylindrical(-3, 0, 0);
+      roboticArm.moveByCylindrical(-2, 0, 0);
     }
     if (isButtonDown[ButtonID::BUTTON_LEFT])
     {
-      roboticArm.moveByCylindrical(3, 0, 0);
+      roboticArm.moveByCylindrical(2, 0, 0);
     }
 
     if (isButtonDown[ButtonID::BUTTON_UP])
@@ -195,11 +195,11 @@ void loop()
 
     if (isButtonDown[ButtonID::BUTTON_GRIPPER_OPEN])
     {
-      roboticArm.gripperServo.moveByAngle(5);
+      roboticArm.moveGripperByAngle(5);
     }
     if (isButtonDown[ButtonID::BUTTON_GRIPPER_CLOSE])
     {
-      roboticArm.gripperServo.moveByAngle(-5);
+      roboticArm.moveGripperByAngle(-5);
     }
 
     timeServoUpdate = millis();

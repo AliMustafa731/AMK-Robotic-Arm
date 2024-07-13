@@ -9,35 +9,29 @@
 //---------------------------------
 // Initialize the Robotic Arm
 //---------------------------------
-void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1, float _L2, float _L3, float _L4)
+void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin)
 {
   // initialize the PCA9685 Servo Driver
   pwmDriver = Adafruit_PWMServoDriver(0x40);
   pwmDriver.begin();
   pwmDriver.setPWMFreq(50);
 
-  setArmLengths(_L1, _L2, _L3, _L4);
+  setArmLengths(140, 140, 10, 150);
 
-  // set the safe (min / max) limits of reachable  positions (in cylindrical coordinates) (found by experimentation)
+  // set the safe (min / max) limits of reachable  positions (in cylindrical coordinates)
+  // (found by experimentation)
   setLimitsCylindrical(0, 180, 110, 220, -100, -25);
 
   // initialize the servo motors
-  // with calibration values of the servo motors for (PWM-to-Angle) Conversions (found by experimentation)
-  // DO NOT CHANGE THESE VALUES
+  // with calibration values for (PWM-to-Angle) Conversions
+  // (found by experimentation)
   baseServo.begin(base_pin, &pwmDriver, 116, 540, 0, 180);
   shoulderServo.begin(shoulder_pin, &pwmDriver, 537, 106, 0, 180);
   elbowServo.begin(elbow_pin, &pwmDriver, 341, 553, 90, 180);
   gripperServo.begin(gripper_pin, &pwmDriver, 120, 570, 0, 180);
 
-  // set the safe (min / max) limits of the servo angles (found by experimentation)
-  // DO NOT CHANGE THESE VALUES
-  baseServo.setLimits(0, 180);
-  shoulderServo.setLimits(40, 120);
-  elbowServo.setLimits(90, 180);
-  gripperServo.setLimits(70, 115);
-
   // set initial position
-  moveToCylindrical(90, 160, 50);
+  moveToCylindrical(90, 160, -25);
 }
 
 //-----------------------------------------------------------------------
@@ -97,6 +91,92 @@ void RoboticArm::moveToCylindrical(float theta, float radius, float z)
 void RoboticArm::moveByCylindrical(float theta, float radius, float z)
 {
   moveToCylindrical(this->Theta + theta, this->Radius + radius, this->mZ + z);
+}
+
+//---------------------------------------------------------------------------
+// update the position of the end-effector from the given joint's angle's
+//---------------------------------------------------------------------------
+void RoboticArm::updatePosition()
+{
+  float x, y, z, theta, radius;
+
+  unsolve(baseServo.getAngle(), shoulderServo.getAngle(), elbowServo.getAngle(), x, y, z);
+
+  cart2polar(x, y, radius, theta);
+
+  theta = RAD_TO_DEG(theta);
+
+  this->mX = x;
+  this->mY = y;
+  this->mZ = z;
+  this->Theta = theta;
+  this->Radius = radius;
+}
+
+//----------------------------------------------------------------------------------
+//  Set the posistions of the joint's servo motors to the given angle (in degrees),
+//  And also updating the current position of the end-effector,
+//----------------------------------------------------------------------------------
+void RoboticArm::setBaseAngle(float angle)
+{
+  // limit the angle in the range (0, 180)
+  angle = max(0, min(angle, 180));
+
+  baseServo.setPositionAngle(angle);
+  updatePosition();
+}
+
+void RoboticArm::setShoulderAngle(float angle)
+{
+  // limit the angle in the range (0, 180)
+  angle = max(0, min(angle, 180));
+
+  shoulderServo.setPositionAngle(angle);
+  updatePosition();
+}
+
+void RoboticArm::setElbowAngle(float angle)
+{
+  // limit the angle in the range (0, 180)
+  angle = max(0, min(angle, 180));
+
+  elbowServo.setPositionAngle(angle);
+  updatePosition();
+}
+
+void RoboticArm::setGripperAngle(float angle)
+{
+  // limit the angle in the range (70, 115) (found by experimentation)
+  angle = max(70, min(angle, 115));
+
+  gripperServo.setPositionAngle(angle);
+
+  // no need to call "updatePosition()",
+  // gripper movement doesn't affect the position of the end-effector
+}
+
+//----------------------------------------------------------------------------------
+//  Move the posistions of the joint's servo motors by the given angle (in degrees),
+//  And also updating the current position of the end-effector,
+//----------------------------------------------------------------------------------
+void RoboticArm::moveBaseByAngle(float angle)
+{
+  setBaseAngle(baseServo.getAngle() + angle);
+}
+
+void RoboticArm::moveSoulderByAngle(float angle)
+{
+  setShoulderAngle(shoulderServo.getAngle() + angle);
+}
+
+void RoboticArm::moveElbowByAngle(float angle)
+{
+  setElbowAngle(elbowServo.getAngle() + angle);
+}
+
+void RoboticArm::moveGripperByAngle(float angle)
+{
+  setGripperAngle(gripperServo.getAngle() + angle);
 }
 
 //--------------------------------------------------------------

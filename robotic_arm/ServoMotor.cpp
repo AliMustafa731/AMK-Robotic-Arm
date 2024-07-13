@@ -17,7 +17,6 @@ void ServoMotor::begin(int _pinNumber, Adafruit_PWMServoDriver* _pwmDriver, floa
   this->pwm = 0;
 
   setRanges(_min_pwm, _max_pwm, _min_angle, _max_angle);
-  setLimits(-45, 225);
 }
 
 //-------------------------------------------------
@@ -31,28 +30,15 @@ void ServoMotor::setRanges(float _min_pwm, float _max_pwm, float _min_angle, flo
   this->max_angle = _max_angle;
 }
 
-//-------------------------------------------------
-// set the safe (min / max) limits of the servo
-//-------------------------------------------------
-void ServoMotor::setLimits(float _min_sweep_angle, float _max_sweep_angle)
-{
-  this->min_sweep_angle = _min_sweep_angle;
-  this->max_sweep_angle = _max_sweep_angle;
-}
-
 //----------------------------------------------------------------------
 // set the position of the servo from the given PWM (in microseconds)
 //----------------------------------------------------------------------
 void ServoMotor::setPositionPWM(int _pwm)
 {
+  this->pwm = _pwm;
+
   // convert PWM to Angle
   this->angle = min_angle + (float(_pwm) - min_pwm) * (max_angle - min_angle) / (max_pwm - min_pwm);
-  
-  // limit the angle
-  this->angle = max(min_sweep_angle, min(angle, max_sweep_angle));
-
-  // convert Angle back to PWM after limiting
-  this->pwm = int(min_pwm + (this->angle - min_angle) * (max_pwm - min_pwm) / (max_angle - min_angle));
 
   // set PWM position of the servo on the PCA9685 Servo Driver
   this->pwmDriver->setPWM(this->pinNumber, 0, this->pwm);
@@ -63,30 +49,13 @@ void ServoMotor::setPositionPWM(int _pwm)
 //----------------------------------------------------------------------
 void ServoMotor::setPositionAngle(float _angle)
 {
-  // limit the angle
-  this->angle = max(min_sweep_angle, min(_angle, max_sweep_angle));
+  this->angle = _angle;
 
   // convert Angle to PWM
   this->pwm = int(min_pwm + (this->angle - min_angle) * (max_pwm - min_pwm) / (max_angle - min_angle));
 
   // set PWM position of the servo on the PCA9685 Servo Driver
   this->pwmDriver->setPWM(this->pinNumber, 0, this->pwm);
-}
-
-//----------------------------------------------------------------------
-// move from current position by the given PWM (in microseconds)
-//----------------------------------------------------------------------
-void ServoMotor::moveByPWM(int _pwm)
-{
-  this->setPositionPWM(this->pwm + _pwm);
-}
-
-//----------------------------------------------------------------------
-// move from current position by the given Angle (in degrees)
-//----------------------------------------------------------------------
-void ServoMotor::moveByAngle(float _angle)
-{
-  this->setPositionAngle(this->angle + _angle);
 }
 
 //-----------------------------------------------

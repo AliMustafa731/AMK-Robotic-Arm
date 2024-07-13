@@ -21,7 +21,7 @@ private:
   float mX, mY, mZ;
   float Theta, Radius;
 
-  // safe (min / max) limits of positions that can be reached (in Cylindrical coordinates) (found by experimentation)
+  // safe (min / max) limits of positions that can be reached (in cylindrical coordinates) (found by experimentation)
   float min_theta, max_theta, min_radius, max_radius, min_Z, max_Z;
 
   /*---------------------------------------------------------------------------------
@@ -35,8 +35,6 @@ private:
   
   // PCA9685 Servo Driver Handle
   Adafruit_PWMServoDriver pwmDriver;
-  
-public:
 
   /*--------------------------------
     Servo Motors objects
@@ -45,13 +43,15 @@ public:
   ServoMotor shoulderServo;
   ServoMotor elbowServo;
   ServoMotor gripperServo;
+  
+public:
 
   RoboticArm(){}
 
   //---------------------------------
   // Initialize the Robotic Arm
   //---------------------------------
-  void begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin, float _L1 = 140, float _L2 = 140, float _L3 = 10, float _L4 = 150);
+  void begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin);
 
   //--------------------------------------------------------------------
   //  Move the end-effector directly to the given position (x, y, z)
@@ -72,6 +72,24 @@ public:
   //  Move the end-effector from it's current position by the given Cylindrical coordinates
   //--------------------------------------------------------------------------------------------
   void moveByCylindrical(float theta, float radius, float z);
+
+  //----------------------------------------------------------------------------------
+  //  Set the posistions of the joint's servo motors to the given angle (in degrees),
+  //  And also updating the current position of the end-effector,
+  //----------------------------------------------------------------------------------
+  void setBaseAngle(float angle);
+  void setShoulderAngle(float angle);
+  void setElbowAngle(float angle);
+  void setGripperAngle(float angle);
+
+  //----------------------------------------------------------------------------------
+  //  Move the posistions of the joint's servo motors by the given angle (in degrees),
+  //  And also updating the current position of the end-effector,
+  //----------------------------------------------------------------------------------
+  void moveBaseByAngle(float angle);
+  void moveSoulderByAngle(float angle);
+  void moveElbowByAngle(float angle);
+  void moveGripperByAngle(float angle);
 
   //--------------------------------------------------------------
   //  Set the lengths of the arms (L1, L2 and L3),
@@ -102,6 +120,11 @@ public:
   float getZ();
   float getRadius();
   float getTheta();
+
+private:
+  
+  // update the position of the end-effector from the given joint's angle's
+  void updatePosition();
 };
 
 //---------------------------------------------------------
