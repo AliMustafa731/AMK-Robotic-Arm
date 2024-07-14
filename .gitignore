@@ -6,4 +6,8 @@
 !*.hpp
 !.gitignore
 !*.aia
+!README.md
+!diagrams/circuit.png
+!diagrams/assembly.png
+!diagrams/thumbnail.png
 external/**
