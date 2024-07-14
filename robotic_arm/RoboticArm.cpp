@@ -20,7 +20,7 @@ void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int grippe
 
   // set the safe (min / max) limits of reachable  positions (in cylindrical coordinates)
   // (found by experimentation)
-  setLimitsCylindrical(0, 180, 110, 220, -100, -25);
+  setLimitsCylindrical(30, 150, 110, 220, -100, -25);
 
   // initialize the servo motors
   // with calibration values for (PWM-to-Angle) Conversions
@@ -74,9 +74,9 @@ void RoboticArm::moveToCylindrical(float theta, float radius, float z)
 
   if (solve(x, y, z, baseAngle, shoulderAngle, elbowAngle))
   {
-    baseServo.setPositionAngle(baseAngle);
-    shoulderServo.setPositionAngle(shoulderAngle);
-    elbowServo.setPositionAngle(elbowAngle);
+    setBaseAngle(baseAngle);
+    setShoulderAngle(shoulderAngle);
+    setElbowAngle(elbowAngle);
     this->mX = x;
     this->mY = y;
     this->mZ = z;
@@ -120,7 +120,7 @@ void RoboticArm::updatePosition()
 void RoboticArm::setBaseAngle(float angle)
 {
   // limit the angle for safety (found by experimentation)
-  angle = max(0, min(angle, 180));
+  angle = max(30, min(angle, 150));
 
   baseServo.setPositionAngle(angle);
   updatePosition();

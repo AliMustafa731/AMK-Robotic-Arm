@@ -72,6 +72,7 @@ void setup()
 
   // set initial position
   roboticArm.moveToCylindrical(90, 160, -25);
+  roboticArm.setGripperAngle(90);
 
   timeServoUpdate = millis();
 }
