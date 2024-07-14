@@ -119,7 +119,7 @@ void RoboticArm::updatePosition()
 //----------------------------------------------------------------------------------
 void RoboticArm::setBaseAngle(float angle)
 {
-  // limit the angle in the range (0, 180)
+  // limit the angle for safety (found by experimentation)
   angle = max(0, min(angle, 180));
 
   baseServo.setPositionAngle(angle);
@@ -128,8 +128,8 @@ void RoboticArm::setBaseAngle(float angle)
 
 void RoboticArm::setShoulderAngle(float angle)
 {
-  // limit the angle in the range (0, 180)
-  angle = max(0, min(angle, 180));
+  // limit the angle for safety (found by experimentation)
+  angle = max(40, min(angle, 120));
 
   shoulderServo.setPositionAngle(angle);
   updatePosition();
@@ -137,8 +137,8 @@ void RoboticArm::setShoulderAngle(float angle)
 
 void RoboticArm::setElbowAngle(float angle)
 {
-  // limit the angle in the range (0, 180)
-  angle = max(0, min(angle, 180));
+  // limit the angle for safety (found by experimentation)
+  angle = max(90, min(angle, 180));
 
   elbowServo.setPositionAngle(angle);
   updatePosition();
@@ -146,7 +146,7 @@ void RoboticArm::setElbowAngle(float angle)
 
 void RoboticArm::setGripperAngle(float angle)
 {
-  // limit the angle in the range (70, 115) (found by experimentation)
+  // limit the angle for safety (found by experimentation)
   angle = max(70, min(angle, 115));
 
   gripperServo.setPositionAngle(angle);
