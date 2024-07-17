@@ -53,23 +53,23 @@ public:
   //---------------------------------
   void begin(int base_pin, int shoulder_pin, int elbow_pin, int gripper_pin);
 
-  //--------------------------------------------------------------------
-  //  Move the end-effector directly to the given position (x, y, z)
-  //--------------------------------------------------------------------
-  void moveTo(float x, float y, float z);
+  //---------------------------------------------------------------------------------------
+  //  Move the end-effector directly to the given position in cartesian coordinates
+  //---------------------------------------------------------------------------------------
+  void moveToCartesian(float x, float y, float z);
 
-  //----------------------------------------------------------------------------
-  //  Move the end-effector from it's current position by the given (x, y, z)
-  //----------------------------------------------------------------------------
-  void moveBy(float x, float y, float z);
+  //--------------------------------------------------------------------------------------------
+  //  Move the end-effector from it's current position by the given cartesian coordinates
+  //--------------------------------------------------------------------------------------------
+  void moveByCartesian(float x, float y, float z);
 
   //---------------------------------------------------------------------------------------
-  //  Move the end-effector directly to the given position in Cylindrical coordinates
+  //  Move the end-effector directly to the given position in cylindrical coordinates
   //---------------------------------------------------------------------------------------
   void moveToCylindrical(float theta, float radius, float z);
 
   //--------------------------------------------------------------------------------------------
-  //  Move the end-effector from it's current position by the given Cylindrical coordinates
+  //  Move the end-effector from it's current position by the given cylindrical coordinates
   //--------------------------------------------------------------------------------------------
   void moveByCylindrical(float theta, float radius, float z);
 

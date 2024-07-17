@@ -34,31 +34,8 @@ void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int grippe
   moveToCylindrical(90, 160, -25);
 }
 
-//-----------------------------------------------------------------------
-//  Move directly to the given position (in Cartesian coordinates)
-//-----------------------------------------------------------------------
-void RoboticArm::moveTo(float x, float y, float z)
-{
-  float radius, theta;
-
-  // convert to polar coordinates
-  cart2polar(x, y, radius, theta);
-  
-  theta = RAD_TO_DEG(theta);
-
-  moveToCylindrical(theta, radius, z);
-}
-
-//----------------------------------------------------------------------------
-//  Move the end-effector from it's current position by the given (x, y, z)
-//----------------------------------------------------------------------------
-void RoboticArm::moveBy(float x, float y, float z)
-{
-  moveTo(this->mX + x, this->mY + y, this->mZ + z);
-}
-
 //---------------------------------------------------------------------------------------
-//  Move the end-effector directly to the given position in Cylindrical coordinates
+//  Move the end-effector directly to the given position in cylindrical coordinates
 //---------------------------------------------------------------------------------------
 void RoboticArm::moveToCylindrical(float theta, float radius, float z)
 {
@@ -74,9 +51,9 @@ void RoboticArm::moveToCylindrical(float theta, float radius, float z)
 
   if (solve(x, y, z, baseAngle, shoulderAngle, elbowAngle))
   {
-    setBaseAngle(baseAngle);
-    setShoulderAngle(shoulderAngle);
-    setElbowAngle(elbowAngle);
+    baseServo.setPositionAngle(baseAngle);
+    shoulderServo.setPositionAngle(shoulderAngle);
+    elbowServo.setPositionAngle(elbowAngle);
     this->mX = x;
     this->mY = y;
     this->mZ = z;
@@ -86,11 +63,34 @@ void RoboticArm::moveToCylindrical(float theta, float radius, float z)
 }
 
 //--------------------------------------------------------------------------------------------
-//  Move the end-effector from it's current position by the given Cylindrical coordinates
+//  Move the end-effector from it's current position by the given cylindrical coordinates
 //--------------------------------------------------------------------------------------------
 void RoboticArm::moveByCylindrical(float theta, float radius, float z)
 {
   moveToCylindrical(this->Theta + theta, this->Radius + radius, this->mZ + z);
+}
+
+//---------------------------------------------------------------------------------------
+//  Move the end-effector directly to the given position in cartesian coordinates
+//---------------------------------------------------------------------------------------
+void RoboticArm::moveToCartesian(float x, float y, float z)
+{
+  float radius, theta;
+
+  // convert to polar coordinates
+  cart2polar(x, y, radius, theta);
+  
+  theta = RAD_TO_DEG(theta);
+
+  moveToCylindrical(theta, radius, z);
+}
+
+//--------------------------------------------------------------------------------------------
+//  Move the end-effector from it's current position by the given cartesian coordinates
+//--------------------------------------------------------------------------------------------
+void RoboticArm::moveByCartesian(float x, float y, float z)
+{
+  moveToCartesian(this->mX + x, this->mY + y, this->mZ + z);
 }
 
 //---------------------------------------------------------------------------
