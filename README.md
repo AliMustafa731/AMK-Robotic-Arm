@@ -26,4 +26,4 @@ See the Robotic arm in action in the following video :
 ![Circuit Diagram](./diagrams/circuit.png)  
 
 ## Assembly :
-![Circuit Diagram](./diagrams/assembly.png)  
+![Arm Assembly Diagram](./diagrams/assembly.png)  

@@ -53,7 +53,7 @@ int8_t command = 0;
 bool isReady = true;
 
 // a counter variable used to update the positions of the servo motors frequently
-unsigned long timeServoUpdate;
+uint32_t timeServoUpdate;
 
 
 //----------------------------
@@ -101,7 +101,9 @@ void loop()
 
     isReady = false;
   }
-  
+
+  //--------------------------------
+  // Execute The Recieved Commands
   //----------------------------------------------------------------------------------------
   // set the state of each button depending on the recived command from the Android App,
   // the Android App sends this command whenever a (Joystick) button is pressed.
@@ -135,7 +137,7 @@ void loop()
     }
   }
   //------------------------------------------------------------------------------------------
-  // set the Position of the end-effector fo the Robotic Arm (in cylindrical coordinates),
+  // set the position of the end-effector of the Robotic Arm (in cylindrical coordinates),
   // the Android App sends this command when (Sliders) are changed.
   //------------------------------------------------------------------------------------------
   else if (command == Command::SET_POSITION)
