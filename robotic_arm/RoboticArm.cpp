@@ -31,7 +31,9 @@ void RoboticArm::begin(int base_pin, int shoulder_pin, int elbow_pin, int grippe
   gripperServo.begin(gripper_pin, &pwmDriver, 120, 570, 0, 180);
 
   // set initial position
+  // DO NOT REMOVE THESE LINES
   moveToCylindrical(90, 160, -25);
+  setGripperAngle(90);
 }
 
 //---------------------------------------------------------------------------------------
