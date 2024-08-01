@@ -16,18 +16,18 @@ class ServoMotor
 {
 private:
 
-  int pwm;      // PWM position (in microseconds)
-  float angle;  // Angle position (in degrees)
-  
-  // PWM-to-Angle conversion ranges
-  float min_pwm, max_pwm;
-  float min_angle, max_angle;
-
   // PCA9685 Servo Driver Handle
   Adafruit_PWMServoDriver* pwmDriver;
   
   // pin number of this servo on the PCA9685 Driver (from 0 to 15)
   int pinNumber;
+
+  int pwm;      // PWM position (pulse length in (1 out of 4096) of the pwmDriver frequenncy period)
+  float angle;  // Angle position (in degrees)
+  
+  // PWM-to-Angle conversion ranges
+  float min_pwm, max_pwm;
+  float min_angle, max_angle;
 
 public:
 
@@ -43,9 +43,9 @@ public:
   //-------------------------------------------------
   void setRanges(float _min_pwm, float _max_pwm, float _min_angle, float _max_angle);
 
-  //----------------------------------------------------------------------
-  // set the position of the servo from the given PWM (in microseconds)
-  //----------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------
+  // set the position of the servo from the given PWM (1 out of 4096 of frequenncy period)
+  //--------------------------------------------------------------------------------------------
   void setPositionPWM(int _pwm);
 
   //----------------------------------------------------------------------

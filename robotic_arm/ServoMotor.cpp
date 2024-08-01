@@ -30,9 +30,9 @@ void ServoMotor::setRanges(float _min_pwm, float _max_pwm, float _min_angle, flo
   this->max_angle = _max_angle;
 }
 
-//----------------------------------------------------------------------
-// set the position of the servo from the given PWM (in microseconds)
-//----------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+// set the position of the servo from the given PWM (1 out of 4096 of frequenncy period)
+//--------------------------------------------------------------------------------------------
 void ServoMotor::setPositionPWM(int _pwm)
 {
   this->pwm = _pwm;
