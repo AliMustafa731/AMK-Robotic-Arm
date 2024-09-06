@@ -17,7 +17,8 @@ enum Command
 {
   SET_POSITION = 1,
   BUTTON_PRESSED = 2,
-  BUTTON_RELEASED = 3
+  BUTTON_RELEASED = 3,
+  READY = 4
 };
 
 // an array containing the state for each of the (8) buttons in Android App
@@ -45,12 +46,7 @@ RoboticArm roboticArm;
 // a buffer used to store the incoming commands
 ByteQueue commandQueue;
 uint8_t commandBuffer[256];
-
-// variable used to store the incoming command from the Android App
-int8_t command = 0;
-
-// flag used to indicate that we're ready to read the next command from the Commands Queue
-bool isReady = true;
+int8_t command = Command::READY;
 
 // a counter variable used to update the positions of the servo motors frequently
 uint32_t timeServoUpdate;
@@ -85,7 +81,7 @@ void loop()
   //----------------------------------------------------------------
   // Read (Bytes) from the Bluetooth device and store in the Queue
   //----------------------------------------------------------------
-  while(Bluetooth.available() > 0 && commandQueue.free_space() > 0)
+  while (Bluetooth.available() > 0 && commandQueue.free_space() > 0)
   {
     uint8_t byte = Bluetooth.read();
 
@@ -95,21 +91,21 @@ void loop()
   //-------------------------------------------------------
   // Read the next command from the Queue
   //-------------------------------------------------------
-  if (isReady && commandQueue.size() > 0)
+  if (command == Command::READY && commandQueue.size() > 0)
   {
     command = commandQueue.nextByte();
-
-    isReady = false;
   }
 
   //--------------------------------
   // Execute The Recieved Commands
-  //----------------------------------------------------------------------------------------
-  // set the state of each button depending on the recived command from the Android App,
-  // the Android App sends this command whenever a (Joystick) button is pressed.
-  //----------------------------------------------------------------------------------------
+  //--------------------------------
   if (command == Command::BUTTON_PRESSED)
   {
+    //----------------------------------------------------------------------------------------
+    // set the state of each button depending on the recived command from the Android App,
+    // the Android App sends this command whenever a (Joystick) button is pressed.
+    //----------------------------------------------------------------------------------------
+
     // this command is expected to be sent with additional (1 byte), representing the ID of the button
     if (commandQueue.size() >= 1)
     {
@@ -119,7 +115,7 @@ void loop()
       isButtonDown[button_id] = true;
 
       // ready for the next command
-      isReady = true;
+      command = Command::READY;
     }
   }
   else if (command == Command::BUTTON_RELEASED)
@@ -133,15 +129,16 @@ void loop()
       isButtonDown[button_id] = false;
 
       // ready for the next command
-      isReady = true;
+      command = Command::READY;
     }
   }
-  //------------------------------------------------------------------------------------------
-  // set the position of the end-effector of the Robotic Arm (in cylindrical coordinates),
-  // the Android App sends this command when (Sliders) are changed.
-  //------------------------------------------------------------------------------------------
   else if (command == Command::SET_POSITION)
   {
+    //------------------------------------------------------------------------------------------
+    // set the position of the end-effector of the Robotic Arm (in cylindrical coordinates),
+    // the Android App sends this command when (Sliders) are changed.
+    //------------------------------------------------------------------------------------------
+
     // this command is expected to be sent with additional (8 bytes),
     // 1st (2 bytes) : 16-bit value of Base angle (Theta)
     // 2nd (2 bytes) : 16-bit value of Radius
@@ -158,7 +155,7 @@ void loop()
       roboticArm.setGripperAngle(gripper_angle);
 
       // ready for the next command
-      isReady = true;
+      command = Command::READY;
     }
   }
 
