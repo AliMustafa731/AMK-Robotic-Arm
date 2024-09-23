@@ -64,7 +64,7 @@ void setup()
   commandQueue = ByteQueue(commandBuffer, sizeof(commandBuffer));
 
   // initialize the robotic arm with servo pins numbers on the PCA9685 Servo Driver
-  roboticArm.begin(0, 1, 2, 3);
+  roboticArm.begin(0, 4, 8, 12);
 
   // set initial position
   roboticArm.moveToCylindrical(90, 160, -25);
