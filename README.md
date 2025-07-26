@@ -4,7 +4,7 @@ This a project made for the university of baghdad, computer engineering departme
 ## Preview :
 See the Robotic arm in action in the following video :  
 
-[![Video Thumbnail](./diagrams/thumbnail.png)](https://www.youtube.com/watch?v=02yBh6fGpnU)  
+[![Video Thumbnail](./diagrams/thumbnail.png)](https://drive.google.com/file/d/1ujAUz8KpqMgVOnT4MLJy1R0TG25h_lRZ/view?usp=drive_link)  
 
 ## Requirements :
 **Hardware:**  
