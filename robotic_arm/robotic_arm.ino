@@ -13,8 +13,7 @@
 
 
 // Android App commands ID's, set to the same values in the Android App
-enum Command
-{
+enum Command {
   SET_POSITION = 1,
   BUTTON_PRESSED = 2,
   BUTTON_RELEASED = 3,
@@ -25,8 +24,7 @@ enum Command
 bool isButtonDown[8];
 
 // Android App buttons ID's, used as index to the above array "isButtonDown"
-enum ButtonID
-{
+enum ButtonID {
   BUTTON_FORWARD = 0,
   BUTTON_BACKWARD = 1,
   BUTTON_RIGHT = 2,
@@ -81,7 +79,7 @@ void loop()
   //----------------------------------------------------------------
   // Read (Bytes) from the Bluetooth device and store in the Queue
   //----------------------------------------------------------------
-  while (Bluetooth.available() > 0 && commandQueue.free_space() > 0)
+  while (Bluetooth.available() > 0 && commandQueue.freeSpace() > 0)
   {
     uint8_t byte = Bluetooth.read();
 
@@ -146,10 +144,10 @@ void loop()
     // 4th (2 bytes) : 16-bit value of (Gripper) angle
     if (commandQueue.size() >= 8)
     {
-      int16_t theta = commandQueue.nextInt_2_Bytes();
-      int16_t radius = commandQueue.nextInt_2_Bytes();
-      int16_t z = commandQueue.nextInt_2_Bytes();
-      int16_t gripper_angle = commandQueue.nextInt_2_Bytes();
+      int16_t theta = commandQueue.nextInt16();
+      int16_t radius = commandQueue.nextInt16();
+      int16_t z = commandQueue.nextInt16();
+      int16_t gripper_angle = commandQueue.nextInt16();
 
       roboticArm.moveToCylindrical(theta, radius, z);
       roboticArm.setGripperAngle(gripper_angle);

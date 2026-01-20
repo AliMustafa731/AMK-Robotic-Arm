@@ -56,8 +56,17 @@ public:
   //  Get Common Data Types from the Queue
   //----------------------------------------
   int8_t nextByte();
-  int16_t nextInt_2_Bytes();
-  int32_t nextInt_4_Bytes();
+  int16_t nextInt16();
+  int32_t nextInt32();
+  float nextFloat();
+
+  //--------------------------------------------
+  //  Insert Common Data Types into the Queue
+  //--------------------------------------------
+  void putByte(uint8_t data);
+  void putInt16(int16_t data);
+  void putInt32(int32_t data);
+  void putFloat(float data);
 
   //-----------------------------------
   // number of elemnts in the Queue
@@ -67,7 +76,7 @@ public:
   //-----------------------------------------------
   // available space left for inserting elemnts
   //-----------------------------------------------
-  size_t free_space();
+  size_t freeSpace();
 };
 
 #endif  // BYTE_QUEUE_H
