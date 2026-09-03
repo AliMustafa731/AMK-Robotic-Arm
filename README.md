@@ -1,5 +1,15 @@
 ## AMK Robotic Arm
-This a project made for the university of baghdad, computer engineering department in 2024, named **Wireless Mobile-Controlled Robotic Arm**. As the name suggests, a Mobile App (programmed using [MIT App Inventor](https://appinventor.mit.edu/)) communicates with an **Arduino Board** through the HC-05 **Bluetooth Module**, the **Arduino** controls the Joint's **(Servo Motors)** of the Robotic Arm through the PCA9685 **Servo Driver**.  
+
+**Wireless Mobile-Controlled Robotic Arm** is a university project developed in 2024 at the **University of Baghdad, Department of Computer Engineering**.
+
+The project is a robotic arm that can be controlled wirelessly using a mobile app. The app sends commands to an Arduino through Bluetooth, and the Arduino moves the arm's joints accordingly.
+
+### How It Works
+
+**Mobile App → Bluetooth → Arduino → Robotic Arm**
+
+The mobile app was created using [MIT App Inventor](https://appinventor.mit.edu/), while the Arduino controls the arm's servo motors through a servo driver.
+
   
 ## Preview :
 See the Robotic arm in action in the following video :  
